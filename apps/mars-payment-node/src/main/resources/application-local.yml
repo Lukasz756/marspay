@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:${MARSPAY_MARS_DB_PORT:5432}/${MARSPAY_MARS_DB_NAME:marspay_mars}
+    username: ${MARSPAY_MARS_DB_USERNAME:marspay}
+    password: ${MARSPAY_MARS_DB_PASSWORD}
