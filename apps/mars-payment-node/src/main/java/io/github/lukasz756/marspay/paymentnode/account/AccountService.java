@@ -47,6 +47,16 @@ public class AccountService {
                 currency
         );
 
+        if (balanceAccountRepository.existsByAccountHolderIdAndCurrency(
+                accountHolder.getId(),
+                balanceAccount.getCurrency()
+        )) {
+            throw new BalanceAccountAlreadyExistsException(
+                    accountHolder.getId(),
+                    balanceAccount.getCurrency()
+            );
+        }
+
         return balanceAccountRepository.save(balanceAccount);
     }
 

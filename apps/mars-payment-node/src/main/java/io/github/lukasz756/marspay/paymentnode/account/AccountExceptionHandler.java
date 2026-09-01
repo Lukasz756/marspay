@@ -50,4 +50,17 @@ public class AccountExceptionHandler {
         problem.setTitle("Account holder not active");
         return problem;
     }
+
+    @ExceptionHandler(BalanceAccountAlreadyExistsException.class)
+    ProblemDetail handleBalanceAccountAlreadyExists(
+            BalanceAccountAlreadyExistsException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Balance account already exists");
+        return problem;
+    }
 }
