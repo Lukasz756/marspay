@@ -38,4 +38,16 @@ public class AccountExceptionHandler {
         problem.setTitle("Account holder not found");
         return problem;
     }
+
+    @ExceptionHandler(AccountHolderNotActiveException.class)
+    ProblemDetail handleAccountHolderNotActiveException(
+            AccountHolderNotActiveException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+        problem.setTitle("Account holder not active");
+        return problem;
+    }
 }

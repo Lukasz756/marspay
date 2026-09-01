@@ -10,9 +10,11 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountHolderRepository accountHolderRepository;
+    private final BalanceAccountRepository balanceAccountRepository;
 
-    AccountService(AccountHolderRepository accountHolderRepository) {
+    AccountService(AccountHolderRepository accountHolderRepository, BalanceAccountRepository balanceAccountRepository) {
         this.accountHolderRepository = accountHolderRepository;
+        this.balanceAccountRepository = balanceAccountRepository;
     }
 
     @Transactional
@@ -28,10 +30,30 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
-    public AccountHolder getAccountHolder(UUID id) {
-        return accountHolderRepository.findById(id)
+    public AccountHolder getAccountHolder(UUID accountHolderId) {
+        return requireAccountHolder(accountHolderId);
+    }
+
+    @Transactional
+    public BalanceAccount openBalanceAccount(UUID accountHolderId, String currency) {
+        AccountHolder accountHolder = requireAccountHolder(accountHolderId);
+
+        if (accountHolder.getStatus() != AccountHolderStatus.ACTIVE) {
+            throw new AccountHolderNotActiveException(accountHolderId);
+        }
+
+        BalanceAccount balanceAccount = BalanceAccount.open(
+                accountHolder.getId(),
+                currency
+        );
+
+        return balanceAccountRepository.save(balanceAccount);
+    }
+
+    private AccountHolder requireAccountHolder(UUID accountHolderId) {
+        return accountHolderRepository.findById(accountHolderId)
                 .orElseThrow(
-                        () -> new AccountHolderNotFoundException(id)
+                        () -> new AccountHolderNotFoundException(accountHolderId)
                 );
     }
 }
