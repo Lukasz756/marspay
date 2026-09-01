@@ -8,7 +8,6 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/account-holders/{accountHolderId}/balance-accounts")
 public class BalanceAccountController {
 
     private final AccountService accountService;
@@ -18,19 +17,31 @@ public class BalanceAccountController {
         this.accountService = accountService;
     }
 
-    @PostMapping
-    public ResponseEntity<OpenBalanceAccountResponse> openBalanceAccount(
+    @PostMapping("/api/account-holders/{accountHolderId}/balance-accounts")
+    public ResponseEntity<BalanceAccountResponse> openBalanceAccount(
             @PathVariable UUID accountHolderId,
             @Valid @RequestBody OpenBalanceAccountRequest request
     ) {
         BalanceAccount balanceAccount = accountService.openBalanceAccount(accountHolderId, request.currency());
 
-        OpenBalanceAccountResponse response = OpenBalanceAccountResponse.from(balanceAccount);
+        BalanceAccountResponse response = BalanceAccountResponse.from(balanceAccount);
 
         URI location = URI.create(
                 "/api/balance-accounts/" + response.id()
         );
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @GetMapping("/api/balance-accounts/{balanceAccountId}")
+    public ResponseEntity<BalanceAccountResponse> getBalanceAccount(
+            @PathVariable UUID balanceAccountId
+    ) {
+        BalanceAccount balanceAccount =
+                accountService.getBalanceAccount(balanceAccountId);
+
+        return ResponseEntity.ok(
+                BalanceAccountResponse.from(balanceAccount)
+        );
     }
 }

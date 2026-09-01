@@ -60,6 +60,14 @@ public class AccountService {
         return balanceAccountRepository.save(balanceAccount);
     }
 
+    @Transactional(readOnly = true)
+    public BalanceAccount getBalanceAccount(UUID balanceAccountId) {
+
+        return balanceAccountRepository.findById(balanceAccountId).orElseThrow(
+                () -> new BalanceAccountNotFoundException(balanceAccountId)
+        );
+    }
+
     private AccountHolder requireAccountHolder(UUID accountHolderId) {
         return accountHolderRepository.findById(accountHolderId)
                 .orElseThrow(

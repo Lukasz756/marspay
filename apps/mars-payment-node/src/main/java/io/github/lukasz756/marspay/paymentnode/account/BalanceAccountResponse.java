@@ -3,7 +3,7 @@ package io.github.lukasz756.marspay.paymentnode.account;
 import java.time.Instant;
 import java.util.UUID;
 
-public record OpenBalanceAccountResponse(
+public record BalanceAccountResponse(
         UUID id,
         UUID accountHolderId,
         String currency,
@@ -15,8 +15,8 @@ public record OpenBalanceAccountResponse(
         Instant updatedAt
 
 ) {
-    public static OpenBalanceAccountResponse from(BalanceAccount balanceAccount) {
-        return new OpenBalanceAccountResponse(
+    public static BalanceAccountResponse from(BalanceAccount balanceAccount) {
+        return new BalanceAccountResponse(
                 balanceAccount.getId(),
                 balanceAccount.getAccountHolderId(),
                 balanceAccount.getCurrency(),

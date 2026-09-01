@@ -63,4 +63,16 @@ public class AccountExceptionHandler {
         problem.setTitle("Balance account already exists");
         return problem;
     }
+
+    @ExceptionHandler(BalanceAccountNotFoundException.class)
+    ProblemDetail handleBalanceAccountNotFoundException(
+            BalanceAccountNotFoundException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+        problem.setTitle("Balance account not found");
+        return problem;
+    }
 }
