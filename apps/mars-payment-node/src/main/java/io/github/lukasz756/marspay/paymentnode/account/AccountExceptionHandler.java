@@ -25,4 +25,17 @@ public class AccountExceptionHandler {
 
         return problem;
     }
+
+    @ExceptionHandler(AccountHolderNotFoundException.class)
+    ProblemDetail handleAccountHolderNotFound(
+            AccountHolderNotFoundException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Account holder not found");
+        return problem;
+    }
 }

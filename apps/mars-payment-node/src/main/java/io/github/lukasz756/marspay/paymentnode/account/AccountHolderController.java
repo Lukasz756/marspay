@@ -2,12 +2,10 @@ package io.github.lukasz756.marspay.paymentnode.account;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/account-holders")
@@ -36,4 +34,10 @@ public class AccountHolderController {
         return ResponseEntity.created(location).body(response);
     }
 
+    @GetMapping("/{id}")
+    public AccountHolderResponse getAccountHolder(@PathVariable UUID id) {
+        AccountHolder accountHolder = accountService.getAccountHolder(id);
+
+        return AccountHolderResponse.from(accountHolder);
+    }
 }
