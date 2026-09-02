@@ -3,6 +3,7 @@ package io.github.lukasz756.marspay.paymentnode.account;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -11,10 +12,12 @@ public class AccountService {
 
     private final AccountHolderRepository accountHolderRepository;
     private final BalanceAccountRepository balanceAccountRepository;
+    private final BalanceOperationRepository balanceOperationRepository;
 
-    AccountService(AccountHolderRepository accountHolderRepository, BalanceAccountRepository balanceAccountRepository) {
+    AccountService(AccountHolderRepository accountHolderRepository, BalanceAccountRepository balanceAccountRepository, BalanceOperationRepository balanceOperationRepository) {
         this.accountHolderRepository = accountHolderRepository;
         this.balanceAccountRepository = balanceAccountRepository;
+        this.balanceOperationRepository = balanceOperationRepository;
     }
 
     @Transactional
@@ -62,16 +65,61 @@ public class AccountService {
 
     @Transactional(readOnly = true)
     public BalanceAccount getBalanceAccount(UUID balanceAccountId) {
+        return requireBalanceAccount(balanceAccountId);
+    }
 
-        return balanceAccountRepository.findById(balanceAccountId).orElseThrow(
-                () -> new BalanceAccountNotFoundException(balanceAccountId)
+    @Transactional(readOnly = true)
+    public List<BalanceAccount> getBalanceAccounts(UUID accountHolderId) {
+        requireAccountHolder(accountHolderId);
+
+        return balanceAccountRepository
+                .findAllByAccountHolderIdOrderByCurrencyAsc(accountHolderId);
+    }
+
+    @Transactional
+    public BalanceOperation creditBalanceAccount(
+            UUID balanceAccountId,
+            long amountMinor,
+            String reference
+    ) {
+        BalanceAccount balanceAccount =
+                requireBalanceAccount(balanceAccountId);
+
+        balanceAccount.credit(amountMinor);
+
+        BalanceOperation operation = BalanceOperation.credit(
+                balanceAccount.getId(),
+                amountMinor,
+                reference,
+                balanceAccount.getAvailableBalanceMinor(),
+                balanceAccount.getReservedBalanceMinor()
         );
+
+        if (balanceOperationRepository
+                .existsByBalanceAccountIdAndReference(
+                        balanceAccountId,
+                        operation.getReference()
+                )) {
+            throw new BalanceOperationAlreadyExistsException(
+                    balanceAccountId,
+                    operation.getReference()
+            );
+        }
+
+        return balanceOperationRepository.save(operation);
     }
 
     private AccountHolder requireAccountHolder(UUID accountHolderId) {
         return accountHolderRepository.findById(accountHolderId)
                 .orElseThrow(
                         () -> new AccountHolderNotFoundException(accountHolderId)
+                );
+    }
+
+    private BalanceAccount requireBalanceAccount(UUID balanceAccountId) {
+        return balanceAccountRepository.findById(balanceAccountId)
+                .orElseThrow(
+                        () -> new BalanceAccountNotFoundException(balanceAccountId)
                 );
     }
 }

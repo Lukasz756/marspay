@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,5 +44,39 @@ public class BalanceAccountController {
         return ResponseEntity.ok(
                 BalanceAccountResponse.from(balanceAccount)
         );
+    }
+
+    @GetMapping("/api/account-holders/{accountHolderId}/balance-accounts")
+    public ResponseEntity<List<BalanceAccountResponse>> getBalanceAccounts(
+            @PathVariable UUID accountHolderId
+    ) {
+        List<BalanceAccountResponse> response = accountService
+                .getBalanceAccounts(accountHolderId)
+                .stream()
+                .map(BalanceAccountResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/balance-accounts/{balanceAccountId}/credits")
+    public ResponseEntity<BalanceOperationResponse> creditBalanceAccount(
+            @PathVariable UUID balanceAccountId,
+            @Valid @RequestBody CreditBalanceAccountRequest request
+    ) {
+        BalanceOperation operation = accountService.creditBalanceAccount(
+                balanceAccountId,
+                request.amountMinor(),
+                request.reference()
+        );
+
+        BalanceOperationResponse response =
+                BalanceOperationResponse.from(operation);
+
+        URI location = URI.create(
+                "/api/balance-operations/" + response.id()
+        );
+
+        return ResponseEntity.created(location).body(response);
     }
 }

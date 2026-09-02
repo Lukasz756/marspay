@@ -75,4 +75,30 @@ public class AccountExceptionHandler {
         problem.setTitle("Balance account not found");
         return problem;
     }
+
+    @ExceptionHandler(BalanceAccountNotActiveException.class)
+    ProblemDetail handleBalanceAccountNotActive(
+            BalanceAccountNotActiveException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Balance account not active");
+        return problem;
+    }
+
+    @ExceptionHandler(BalanceOperationAlreadyExistsException.class)
+    ProblemDetail handleBalanceOperationAlreadyExists(
+            BalanceOperationAlreadyExistsException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Balance operation already exists");
+        return problem;
+    }
 }

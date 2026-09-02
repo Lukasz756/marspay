@@ -81,6 +81,30 @@ public class BalanceAccount {
         return new BalanceAccount(accountHolderId, currency);
     }
 
+    public void credit(long amountMinor) {
+        if (status != BalanceAccountStatus.ACTIVE) {
+            throw new BalanceAccountNotActiveException(id);
+        }
+
+        if (amountMinor <= 0) {
+            throw new IllegalArgumentException(
+                    "Credit amount must be greater than 0"
+            );
+        }
+
+        try {
+            availableBalanceMinor = Math.addExact(
+                    availableBalanceMinor,
+                    amountMinor
+            );
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException(
+                    "Available balance exceeds supported range",
+                    exception
+            );
+        }
+    }
+
     public UUID getId() {
         return id;
     }

@@ -2,3 +2,7 @@ databaseChangeLog:
   - include:
       file: changes/001-create-account-model.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/002-create-balance-operation.yaml
+      relativeToChangelogFile: true
