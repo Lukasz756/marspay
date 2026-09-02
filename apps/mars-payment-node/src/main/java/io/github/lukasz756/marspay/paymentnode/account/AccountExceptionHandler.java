@@ -101,4 +101,16 @@ public class AccountExceptionHandler {
         problem.setTitle("Balance operation already exists");
         return problem;
     }
+
+    @ExceptionHandler(BalanceOperationNotFoundException.class)
+    ProblemDetail handleBalanceOperationNotFoundException(
+            BalanceOperationNotFoundException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+        problem.setTitle("Balance operation not found");
+        return problem;
+    }
 }

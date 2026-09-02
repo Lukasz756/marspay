@@ -109,6 +109,14 @@ public class AccountService {
         return balanceOperationRepository.save(operation);
     }
 
+    @Transactional(readOnly = true)
+    public BalanceOperation getBalanceOperation(UUID operationId) {
+        return balanceOperationRepository.findById(operationId)
+                .orElseThrow(
+                        () -> new BalanceOperationNotFoundException(operationId)
+                );
+    }
+
     private AccountHolder requireAccountHolder(UUID accountHolderId) {
         return accountHolderRepository.findById(accountHolderId)
                 .orElseThrow(
