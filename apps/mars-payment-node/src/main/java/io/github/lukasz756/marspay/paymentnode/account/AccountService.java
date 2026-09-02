@@ -118,6 +118,18 @@ public class AccountService {
                 );
     }
 
+    @Transactional(readOnly = true)
+    public List<BalanceOperation> getBalanceOperations(
+            UUID balanceAccountId
+    ) {
+        requireBalanceAccount(balanceAccountId);
+
+        return balanceOperationRepository
+                .findAllByBalanceAccountIdOrderByCreatedAtDesc(
+                        balanceAccountId
+                );
+    }
+
     private AccountHolder requireAccountHolder(UUID accountHolderId) {
         return accountHolderRepository.findById(accountHolderId)
                 .orElseThrow(

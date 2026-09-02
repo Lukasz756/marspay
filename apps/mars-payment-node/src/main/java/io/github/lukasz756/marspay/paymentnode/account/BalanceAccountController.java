@@ -79,4 +79,17 @@ public class BalanceAccountController {
 
         return ResponseEntity.created(location).body(response);
     }
+
+    @GetMapping("/api/balance-accounts/{balanceAccountId}/operations")
+    public ResponseEntity<List<BalanceOperationResponse>> getBalanceOperations(
+            @PathVariable UUID balanceAccountId
+    ) {
+        List<BalanceOperationResponse> response = accountService
+                .getBalanceOperations(balanceAccountId)
+                .stream()
+                .map(BalanceOperationResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
 }
