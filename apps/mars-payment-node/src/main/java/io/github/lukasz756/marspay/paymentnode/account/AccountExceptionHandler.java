@@ -1,5 +1,6 @@
 package io.github.lukasz756.marspay.paymentnode.account;
 
+import io.github.lukasz756.marspay.paymentnode.account.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

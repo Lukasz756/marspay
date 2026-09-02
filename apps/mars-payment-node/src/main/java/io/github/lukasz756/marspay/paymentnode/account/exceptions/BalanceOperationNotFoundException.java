@@ -1,4 +1,4 @@
-package io.github.lukasz756.marspay.paymentnode.account;
+package io.github.lukasz756.marspay.paymentnode.account.exceptions;
 
 import java.util.UUID;
 

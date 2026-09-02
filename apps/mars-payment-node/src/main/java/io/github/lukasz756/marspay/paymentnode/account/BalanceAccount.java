@@ -1,5 +1,6 @@
 package io.github.lukasz756.marspay.paymentnode.account;
 
+import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccountNotActiveException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
