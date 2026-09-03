@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
-interface BalanceAccountRepository extends JpaRepository<BalanceAccount, UUID> {
+public interface BalanceAccountRepository extends JpaRepository<BalanceAccount, UUID> {
     boolean existsByAccountHolderIdAndCurrency(
             UUID accountHolderId,
             String currency

@@ -11,7 +11,8 @@ public record BalanceOperationResponse(
         String reference,
         long availableBalanceAfterMinor,
         long reservedBalanceAfterMinor,
-        Instant createdAt
+        Instant createdAt,
+        UUID transferId
 ) {
     public static BalanceOperationResponse from(BalanceOperation operation) {
         return new BalanceOperationResponse(
@@ -22,7 +23,8 @@ public record BalanceOperationResponse(
                 operation.getReference(),
                 operation.getAvailableBalanceAfterMinor(),
                 operation.getReservedBalanceAfterMinor(),
-                operation.getCreatedAt()
+                operation.getCreatedAt(),
+                operation.getTransferId()
         );
     }
 }

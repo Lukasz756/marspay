@@ -114,4 +114,18 @@ public class AccountExceptionHandler {
         problem.setTitle("Balance operation not found");
         return problem;
     }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    ProblemDetail handleInsufficientBalance(
+            InsufficientBalanceException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Insufficient balance");
+
+        return problem;
+    }
 }

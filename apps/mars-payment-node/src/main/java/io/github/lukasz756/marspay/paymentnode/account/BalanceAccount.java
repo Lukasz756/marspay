@@ -1,6 +1,7 @@
 package io.github.lukasz756.marspay.paymentnode.account;
 
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccountNotActiveException;
+import io.github.lukasz756.marspay.paymentnode.account.exceptions.InsufficientBalanceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -104,6 +105,28 @@ public class BalanceAccount {
                     exception
             );
         }
+    }
+
+    public void debit(long amountMinor) {
+        if (status != BalanceAccountStatus.ACTIVE) {
+            throw new BalanceAccountNotActiveException(id);
+        }
+
+        if (amountMinor <= 0) {
+            throw new IllegalArgumentException(
+                    "Debit amount must be greater than 0"
+            );
+        }
+
+        if (availableBalanceMinor < amountMinor) {
+            throw new InsufficientBalanceException(
+                    id,
+                    availableBalanceMinor,
+                    amountMinor
+            );
+        }
+
+        availableBalanceMinor -= amountMinor;
     }
 
     public UUID getId() {

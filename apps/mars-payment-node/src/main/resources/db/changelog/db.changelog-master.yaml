@@ -6,3 +6,7 @@ databaseChangeLog:
   - include:
       file: changes/002-create-balance-operation.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/003-create-balance-transfer.yaml
+      relativeToChangelogFile: true

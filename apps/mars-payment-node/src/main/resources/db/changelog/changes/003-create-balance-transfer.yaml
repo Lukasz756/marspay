@@ -1,0 +1,121 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-balance-transfer
+      author: lukasz756
+      changes:
+        - createTable:
+            tableName: balance_transfer
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_balance_transfer
+
+              - column:
+                  name: source_balance_account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: target_balance_account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: amount_minor
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: reference
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: balance_transfer
+            columnNames: source_balance_account_id, reference
+            constraintName: uq_balance_transfer_source_reference
+
+        - addForeignKeyConstraint:
+            baseTableName: balance_transfer
+            baseColumnNames: source_balance_account_id
+            referencedTableName: balance_account
+            referencedColumnNames: id
+            constraintName: fk_balance_transfer_source_account
+
+        - addForeignKeyConstraint:
+            baseTableName: balance_transfer
+            baseColumnNames: target_balance_account_id
+            referencedTableName: balance_account
+            referencedColumnNames: id
+            constraintName: fk_balance_transfer_target_account
+
+        - sql:
+            sql: >
+              ALTER TABLE balance_transfer
+              ADD CONSTRAINT ck_balance_transfer_amount_positive
+              CHECK (amount_minor > 0)
+
+        - sql:
+            sql: >
+              ALTER TABLE balance_transfer
+              ADD CONSTRAINT ck_balance_transfer_different_accounts
+              CHECK (source_balance_account_id <> target_balance_account_id)
+
+        - createIndex:
+            tableName: balance_transfer
+            indexName: idx_balance_transfer_source_created_at
+            columns:
+              - column:
+                  name: source_balance_account_id
+              - column:
+                  name: created_at
+
+        - createIndex:
+            tableName: balance_transfer
+            indexName: idx_balance_transfer_target_created_at
+            columns:
+              - column:
+                  name: target_balance_account_id
+              - column:
+                  name: created_at
+
+        - addColumn:
+            tableName: balance_operation
+            columns:
+              - column:
+                  name: transfer_id
+                  type: UUID
+
+        - addForeignKeyConstraint:
+            baseTableName: balance_operation
+            baseColumnNames: transfer_id
+            referencedTableName: balance_transfer
+            referencedColumnNames: id
+            constraintName: fk_balance_operation_transfer
+
+        - createIndex:
+            tableName: balance_operation
+            indexName: idx_balance_operation_transfer_id
+            columns:
+              - column:
+                  name: transfer_id

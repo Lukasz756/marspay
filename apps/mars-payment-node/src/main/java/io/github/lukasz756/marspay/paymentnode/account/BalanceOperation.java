@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -37,11 +38,22 @@ public class BalanceOperation {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "transfer_id", updatable = false)
+    private UUID transferId;
+
     protected BalanceOperation() {
 
     }
 
-    private BalanceOperation(UUID balanceAccountId, long amountMinor, String reference, long availableBalanceAfterMinor, long reservedBalanceAfterMinor) {
+    private BalanceOperation(
+            UUID balanceAccountId,
+            BalanceOperationType type,
+            long amountMinor,
+            String reference,
+            long availableBalanceAfterMinor,
+            long reservedBalanceAfterMinor,
+            UUID transferId
+    ) {
         if (balanceAccountId == null) {
             throw new IllegalArgumentException("Balance account id must not be null");
         }
@@ -81,7 +93,10 @@ public class BalanceOperation {
         this.reference = normalizedReference;
         this.availableBalanceAfterMinor = availableBalanceAfterMinor;
         this.reservedBalanceAfterMinor = reservedBalanceAfterMinor;
-        this.type = BalanceOperationType.CREDIT;
+        this.transferId = transferId;
+        this.type = Objects.requireNonNull(
+                type,
+                "Balance operation type must not be null");
 
     }
 
@@ -94,10 +109,54 @@ public class BalanceOperation {
     ) {
         return new BalanceOperation(
                 balanceAccountId,
+                BalanceOperationType.CREDIT,
                 amountMinor,
                 reference,
                 availableBalanceAfterMinor,
-                reservedBalanceAfterMinor
+                reservedBalanceAfterMinor,
+                null
+        );
+    }
+
+    public static BalanceOperation transferCredit(
+            UUID transferId,
+            UUID balanceAccountId,
+            long amountMinor,
+            String reference,
+            long availableBalanceAfterMinor,
+            long reservedBalanceAfterMinor
+    ) {
+        Objects.requireNonNull(transferId, "Transfer id must not be null");
+
+        return new BalanceOperation(
+                balanceAccountId,
+                BalanceOperationType.CREDIT,
+                amountMinor,
+                reference,
+                availableBalanceAfterMinor,
+                reservedBalanceAfterMinor,
+                transferId
+        );
+    }
+
+    public static BalanceOperation transferDebit(
+            UUID transferId,
+            UUID balanceAccountId,
+            long amountMinor,
+            String reference,
+            long availableBalanceAfterMinor,
+            long reservedBalanceAfterMinor
+    ) {
+        Objects.requireNonNull(transferId, "Transfer id must not be null");
+
+        return new BalanceOperation(
+                balanceAccountId,
+                BalanceOperationType.DEBIT,
+                amountMinor,
+                reference,
+                availableBalanceAfterMinor,
+                reservedBalanceAfterMinor,
+                transferId
         );
     }
 
@@ -131,5 +190,9 @@ public class BalanceOperation {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public UUID getTransferId() {
+        return transferId;
     }
 }
