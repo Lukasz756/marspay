@@ -1,6 +1,7 @@
 package io.github.lukasz756.marspay.paymentnode.payment;
 
 
+import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferSameAccountException;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -53,8 +54,8 @@ public class BalanceTransfer {
         }
 
         if (sourceBalanceAccountId.equals(targetBalanceAccountId)) {
-            throw new IllegalArgumentException(
-                    "Target balance account cannot be the same as source"
+            throw new BalanceTransferSameAccountException(
+                    sourceBalanceAccountId
             );
         }
 

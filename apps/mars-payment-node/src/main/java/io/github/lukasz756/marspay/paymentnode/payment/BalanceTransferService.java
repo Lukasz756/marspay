@@ -7,6 +7,7 @@ import io.github.lukasz756.marspay.paymentnode.account.BalanceOperationRepositor
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccountNotFoundException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferAlreadyExistsException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferCurrencyMismatchException;
+import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +96,14 @@ public class BalanceTransferService {
         );
 
         return savedTransfer;
+    }
+
+    @Transactional(readOnly = true)
+    public BalanceTransfer getBalanceTransfer(UUID transferId) {
+        return balanceTransferRepository.findById(transferId)
+                .orElseThrow(
+                        () -> new BalanceTransferNotFoundException(transferId)
+                );
     }
 
     private BalanceAccount requireBalanceAccount(UUID balanceAccountId) {

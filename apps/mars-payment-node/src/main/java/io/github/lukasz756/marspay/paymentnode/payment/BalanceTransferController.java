@@ -2,12 +2,10 @@ package io.github.lukasz756.marspay.paymentnode.payment;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/balance-transfers")
@@ -40,5 +38,17 @@ public class BalanceTransferController {
         );
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @GetMapping("/{transferId}")
+    public ResponseEntity<BalanceTransferResponse> getBalanceTransfer(
+            @PathVariable UUID transferId
+    ) {
+        BalanceTransfer transfer =
+                balanceTransferService.getBalanceTransfer(transferId);
+
+        return ResponseEntity.ok(
+                BalanceTransferResponse.from(transfer)
+        );
     }
 }

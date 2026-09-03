@@ -2,6 +2,8 @@ package io.github.lukasz756.marspay.paymentnode.payment;
 
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferAlreadyExistsException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferCurrencyMismatchException;
+import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferNotFoundException;
+import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferSameAccountException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,6 +36,34 @@ public class PaymentExceptionHandler {
         );
 
         problem.setTitle("Balance transfer currency mismatch");
+
+        return problem;
+    }
+
+    @ExceptionHandler(BalanceTransferNotFoundException.class)
+    ProblemDetail handleBalanceTransferNotFound(
+            BalanceTransferNotFoundException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Balance transfer not found");
+
+        return problem;
+    }
+
+    @ExceptionHandler(BalanceTransferSameAccountException.class)
+    ProblemDetail handleBalanceTransferSameAccount(
+            BalanceTransferSameAccountException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Source and target accounts are the same");
 
         return problem;
     }
