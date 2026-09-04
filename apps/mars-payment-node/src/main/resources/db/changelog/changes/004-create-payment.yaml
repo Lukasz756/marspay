@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-payment
+      author: lukasz756
+      changes:
+        - createTable:
+            tableName: payment
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_payment
+              - column:
+                  name: source_balance_account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_balance_account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_minor
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reference
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: payment
+            columnNames: source_balance_account_id, reference
+            constraintName: uq_payment_source_reference
+
+        - addForeignKeyConstraint:
+            baseTableName: payment
+            baseColumnNames: source_balance_account_id
+            referencedTableName: balance_account
+            referencedColumnNames: id
+            constraintName: fk_payment_source_account
+
+        - addForeignKeyConstraint:
+            baseTableName: payment
+            baseColumnNames: target_balance_account_id
+            referencedTableName: balance_account
+            referencedColumnNames: id
+            constraintName: fk_payment_target_account
+
+        - sql:
+            sql: >
+              ALTER TABLE payment
+              ADD CONSTRAINT ck_payment_amount_positive
+              CHECK (amount_minor > 0)
+
+        - sql:
+            sql: >
+              ALTER TABLE payment
+              ADD CONSTRAINT ck_payment_different_accounts
+              CHECK (source_balance_account_id <> target_balance_account_id)
+            

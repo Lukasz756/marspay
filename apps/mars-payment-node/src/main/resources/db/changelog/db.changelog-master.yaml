@@ -10,3 +10,7 @@ databaseChangeLog:
   - include:
       file: changes/003-create-balance-transfer.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/004-create-payment.yaml
+      relativeToChangelogFile: true

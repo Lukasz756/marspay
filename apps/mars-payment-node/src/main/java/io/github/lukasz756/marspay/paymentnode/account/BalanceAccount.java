@@ -2,6 +2,7 @@ package io.github.lukasz756.marspay.paymentnode.account;
 
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccountNotActiveException;
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.InsufficientBalanceException;
+import io.github.lukasz756.marspay.paymentnode.account.exceptions.InsufficientReservedBalanceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,7 +30,7 @@ public class BalanceAccount {
     @Column(name = "account_holder_id", nullable = false, updatable = false)
     private UUID accountHolderId;
 
-    @Column(nullable = false, updatable = false, length = 3)
+    @Column(name = "currency", nullable = false, updatable = false, length = 3)
     private String currency;
 
     @Column(name = "available_balance_minor", nullable = false)
@@ -127,6 +128,85 @@ public class BalanceAccount {
         }
 
         availableBalanceMinor -= amountMinor;
+    }
+
+    public void reserve(long amountMinor) {
+        if (this.status != BalanceAccountStatus.ACTIVE) {
+            throw new BalanceAccountNotActiveException(this.id);
+        }
+
+        if (amountMinor <= 0) {
+            throw new IllegalArgumentException("Reserve amount must be greater than 0");
+        }
+
+        if (this.availableBalanceMinor < amountMinor) {
+            throw new InsufficientBalanceException(this.getId(), this.availableBalanceMinor, amountMinor);
+        }
+
+        try {
+            long newReservedBalanceMinor = Math.addExact(
+                    reservedBalanceMinor,
+                    amountMinor
+            );
+
+            availableBalanceMinor -= amountMinor;
+            reservedBalanceMinor = newReservedBalanceMinor;
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException(
+                    "Reserved balance exceeds supported range",
+                    exception
+            );
+        }
+
+    }
+
+    public void captureReserved(long amountMinor) {
+        if (amountMinor <= 0) {
+            throw new IllegalArgumentException(
+                    "Capture amount must be greater than 0"
+            );
+        }
+
+        if (reservedBalanceMinor < amountMinor) {
+            throw new InsufficientReservedBalanceException(
+                    id,
+                    reservedBalanceMinor,
+                    amountMinor
+            );
+        }
+
+        reservedBalanceMinor -= amountMinor;
+    }
+
+    public void releaseReserved(long amountMinor) {
+        if (amountMinor <= 0) {
+            throw new IllegalArgumentException(
+                    "Release amount must be greater than 0"
+            );
+        }
+
+        if (reservedBalanceMinor < amountMinor) {
+            throw new InsufficientReservedBalanceException(
+                    id,
+                    reservedBalanceMinor,
+                    amountMinor
+            );
+        }
+
+        try {
+            long newAvailableBalanceMinor = Math.addExact(
+                    availableBalanceMinor,
+                    amountMinor
+            );
+
+            reservedBalanceMinor -= amountMinor;
+            availableBalanceMinor = newAvailableBalanceMinor;
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException(
+                    "Available balance exceeds supported range",
+                    exception
+            );
+        }
     }
 
     public UUID getId() {

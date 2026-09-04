@@ -1,9 +1,6 @@
 package io.github.lukasz756.marspay.paymentnode.payment;
 
-import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferAlreadyExistsException;
-import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferCurrencyMismatchException;
-import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferNotFoundException;
-import io.github.lukasz756.marspay.paymentnode.payment.exceptions.BalanceTransferSameAccountException;
+import io.github.lukasz756.marspay.paymentnode.payment.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -64,6 +61,72 @@ public class PaymentExceptionHandler {
         );
 
         problem.setTitle("Source and target accounts are the same");
+
+        return problem;
+    }
+
+    @ExceptionHandler(PaymentAlreadyExistsException.class)
+    ProblemDetail handlePaymentAlreadyExistsException(
+            PaymentAlreadyExistsException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+        problem.setTitle("Payment already exists");
+
+        return problem;
+    }
+
+    @ExceptionHandler(PaymentCurrencyMismatchException.class)
+    ProblemDetail handlePaymentCurrencyMismatchException(
+            PaymentCurrencyMismatchException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+        problem.setTitle("Source and target accounts have different currency");
+
+        return problem;
+    }
+
+    @ExceptionHandler(PaymentSameAccountException.class)
+    ProblemDetail handlePaymentSameAccount(
+            PaymentSameAccountException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Source and target accounts are the same");
+
+        return problem;
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    ProblemDetail handlePaymentNotFound(PaymentNotFoundException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Payment not found");
+
+        return problem;
+    }
+
+    @ExceptionHandler(PaymentInvalidStatusException.class)
+    ProblemDetail handlePaymentInvalidStatus(
+            PaymentInvalidStatusException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Invalid payment status");
 
         return problem;
     }

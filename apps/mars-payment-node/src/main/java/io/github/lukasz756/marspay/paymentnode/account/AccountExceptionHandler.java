@@ -128,4 +128,18 @@ public class AccountExceptionHandler {
 
         return problem;
     }
+
+    @ExceptionHandler(InsufficientReservedBalanceException.class)
+    ProblemDetail handleInsufficientReservedBalance(
+            InsufficientReservedBalanceException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Insufficient reserved balance");
+
+        return problem;
+    }
 }
