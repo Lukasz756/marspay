@@ -3,6 +3,7 @@ package io.github.lukasz756.marspay.paymentnode.account;
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -142,4 +143,20 @@ public class AccountExceptionHandler {
 
         return problem;
     }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ProblemDetail handleOptimisticLockingFailure(
+            ObjectOptimisticLockingFailureException exception
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "The resource was modified by another request. "
+                        + "Retrieve its current state before retrying."
+        );
+
+        problem.setTitle("Concurrent modification");
+
+        return problem;
+    }
+
 }
