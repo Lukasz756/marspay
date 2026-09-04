@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -77,5 +78,18 @@ public class PaymentController {
         Payment payment = paymentService.refundPayment(paymentId);
 
         return ResponseEntity.ok(PaymentResponse.from(payment));
+    }
+
+    @GetMapping("/{paymentId}/operations")
+    public ResponseEntity<List<PaymentOperationResponse>> getPaymentOperations(
+            @PathVariable UUID paymentId
+    ) {
+        List<PaymentOperationResponse> response = paymentService
+                .getPaymentOperations(paymentId)
+                .stream()
+                .map(PaymentOperationResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 }

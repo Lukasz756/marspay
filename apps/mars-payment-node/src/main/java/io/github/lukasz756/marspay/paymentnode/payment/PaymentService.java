@@ -9,6 +9,7 @@ import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentNotFoun
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,10 +17,12 @@ import java.util.UUID;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final BalanceAccountRepository balanceAccountRepository;
+    private final PaymentOperationRepository paymentOperationRepository;
 
-    public PaymentService(PaymentRepository paymentRepository, BalanceAccountRepository balanceAccountRepository) {
+    public PaymentService(PaymentRepository paymentRepository, BalanceAccountRepository balanceAccountRepository, PaymentOperationRepository paymentOperationRepository) {
         this.paymentRepository = paymentRepository;
         this.balanceAccountRepository = balanceAccountRepository;
+        this.paymentOperationRepository = paymentOperationRepository;
     }
 
     @Transactional
@@ -56,8 +59,11 @@ public class PaymentService {
                     payment.getReference()
             );
         }
+        Payment savedPayment = paymentRepository.save(payment);
 
-        return paymentRepository.save(payment);
+        recordOperation(savedPayment, PaymentOperationType.CREATE);
+
+        return savedPayment;
     }
 
     @Transactional
@@ -73,6 +79,8 @@ public class PaymentService {
 
         payment.authorize();
         sourceAccount.reserve(payment.getAmountMinor());
+
+        recordOperation(payment, PaymentOperationType.AUTHORIZE);
 
         return payment;
     }
@@ -104,6 +112,8 @@ public class PaymentService {
         sourceAccount.captureReserved(payment.getAmountMinor());
         targetAccount.credit(payment.getAmountMinor());
 
+        recordOperation(payment, PaymentOperationType.CAPTURE);
+
         return payment;
     }
 
@@ -126,6 +136,8 @@ public class PaymentService {
 
             sourceAccount.releaseReserved(payment.getAmountMinor());
         }
+
+        recordOperation(payment, PaymentOperationType.CANCEL);
 
         return payment;
     }
@@ -151,6 +163,32 @@ public class PaymentService {
         targetAccount.debit(payment.getAmountMinor());
         sourceAccount.credit(payment.getAmountMinor());
 
+        recordOperation(payment, PaymentOperationType.REFUND);
+
         return payment;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentOperation> getPaymentOperations(UUID paymentId) {
+        if (!paymentRepository.existsById(paymentId)) {
+            throw new PaymentNotFoundException(paymentId);
+        }
+
+        return paymentOperationRepository
+                .findAllByPaymentIdOrderByCreatedAtAsc(paymentId);
+    }
+
+
+    private void recordOperation(
+            Payment payment,
+            PaymentOperationType type
+    ) {
+        PaymentOperation operation = PaymentOperation.record(
+                payment.getId(),
+                type,
+                payment.getAmountMinor()
+        );
+
+        paymentOperationRepository.save(operation);
     }
 }
