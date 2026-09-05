@@ -3,6 +3,9 @@ package io.github.lukasz756.marspay.paymentnode.payment;
 import io.github.lukasz756.marspay.paymentnode.account.BalanceAccount;
 import io.github.lukasz756.marspay.paymentnode.account.BalanceAccountRepository;
 import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccountNotFoundException;
+import io.github.lukasz756.marspay.paymentnode.ledger.LedgerBalanceBucket;
+import io.github.lukasz756.marspay.paymentnode.ledger.LedgerService;
+import io.github.lukasz756.marspay.paymentnode.ledger.LedgerTransactionType;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentAlreadyExistsException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentCurrencyMismatchException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentNotFoundException;
@@ -18,11 +21,13 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final BalanceAccountRepository balanceAccountRepository;
     private final PaymentOperationRepository paymentOperationRepository;
+    private final LedgerService ledgerService;
 
-    public PaymentService(PaymentRepository paymentRepository, BalanceAccountRepository balanceAccountRepository, PaymentOperationRepository paymentOperationRepository) {
+    public PaymentService(PaymentRepository paymentRepository, BalanceAccountRepository balanceAccountRepository, PaymentOperationRepository paymentOperationRepository, LedgerService ledgerService) {
         this.paymentRepository = paymentRepository;
         this.balanceAccountRepository = balanceAccountRepository;
         this.paymentOperationRepository = paymentOperationRepository;
+        this.ledgerService = ledgerService;
     }
 
     @Transactional
@@ -82,6 +87,18 @@ public class PaymentService {
 
         recordOperation(payment, PaymentOperationType.AUTHORIZE);
 
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_AUTHORIZE,
+                payment.getCurrency(),
+                payment.getReference(),
+                sourceAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                sourceAccount.getId(),
+                LedgerBalanceBucket.RESERVED,
+                payment.getAmountMinor()
+        );
+
         return payment;
     }
 
@@ -114,6 +131,18 @@ public class PaymentService {
 
         recordOperation(payment, PaymentOperationType.CAPTURE);
 
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_CAPTURE,
+                payment.getCurrency(),
+                payment.getReference(),
+                sourceAccount.getId(),
+                LedgerBalanceBucket.RESERVED,
+                targetAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
+
         return payment;
     }
 
@@ -135,6 +164,18 @@ public class PaymentService {
                     ));
 
             sourceAccount.releaseReserved(payment.getAmountMinor());
+
+            ledgerService.recordPaymentMovement(
+                    payment.getId(),
+                    LedgerTransactionType.PAYMENT_CANCEL,
+                    payment.getCurrency(),
+                    payment.getReference(),
+                    sourceAccount.getId(),
+                    LedgerBalanceBucket.RESERVED,
+                    sourceAccount.getId(),
+                    LedgerBalanceBucket.AVAILABLE,
+                    payment.getAmountMinor()
+            );
         }
 
         recordOperation(payment, PaymentOperationType.CANCEL);
@@ -164,6 +205,18 @@ public class PaymentService {
         sourceAccount.credit(payment.getAmountMinor());
 
         recordOperation(payment, PaymentOperationType.REFUND);
+
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_REFUND,
+                payment.getCurrency(),
+                payment.getReference(),
+                targetAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                sourceAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
 
         return payment;
     }

@@ -1,0 +1,143 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-ledger
+      author: lukasz756
+      changes:
+        - createTable:
+            tableName: ledger_transaction
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_ledger_transaction
+
+              - column:
+                  name: payment_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: reference
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: ledger_transaction
+            columnNames: payment_id, type
+            constraintName: uq_ledger_transaction_payment_type
+
+        - addForeignKeyConstraint:
+            baseTableName: ledger_transaction
+            baseColumnNames: payment_id
+            referencedTableName: payment
+            referencedColumnNames: id
+            constraintName: fk_ledger_transaction_payment
+
+        - createIndex:
+            tableName: ledger_transaction
+            indexName: idx_ledger_transaction_payment_created_at
+            columns:
+              - column:
+                  name: payment_id
+              - column:
+                  name: created_at
+
+        - createTable:
+            tableName: ledger_entry
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_ledger_entry
+
+              - column:
+                  name: ledger_transaction_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: balance_account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: balance_bucket
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: amount_minor
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: ledger_entry
+            baseColumnNames: ledger_transaction_id
+            referencedTableName: ledger_transaction
+            referencedColumnNames: id
+            constraintName: fk_ledger_entry_transaction
+
+        - addForeignKeyConstraint:
+            baseTableName: ledger_entry
+            baseColumnNames: balance_account_id
+            referencedTableName: balance_account
+            referencedColumnNames: id
+            constraintName: fk_ledger_entry_balance_account
+
+        - sql:
+            sql: >
+              ALTER TABLE ledger_entry
+              ADD CONSTRAINT ck_ledger_entry_amount_non_zero
+              CHECK (amount_minor <> 0)
+
+        - createIndex:
+            tableName: ledger_entry
+            indexName: idx_ledger_entry_transaction
+            columns:
+              - column:
+                  name: ledger_transaction_id
+
+        - createIndex:
+            tableName: ledger_entry
+            indexName: idx_ledger_entry_account_created_at
+            columns:
+              - column:
+                  name: balance_account_id
+              - column:
+                  name: created_at
