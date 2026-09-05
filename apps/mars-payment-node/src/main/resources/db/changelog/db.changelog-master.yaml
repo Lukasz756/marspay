@@ -18,3 +18,7 @@ databaseChangeLog:
   - include:
       file: changes/005-create-payment-operation.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/006-create-idempotency-record.yaml
+      relativeToChangelogFile: true
