@@ -22,7 +22,7 @@ public class LedgerService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public LedgerTransaction recordPaymentMovement(
+    public void recordPaymentMovement(
             UUID paymentId,
             LedgerTransactionType type,
             String currency,
@@ -33,13 +33,12 @@ public class LedgerService {
             LedgerBalanceBucket targetBucket,
             long amountMinor
     ) {
-        LedgerTransaction transaction =
-                LedgerTransaction.forPayment(
-                        paymentId,
-                        type,
-                        currency,
-                        reference
-                );
+        LedgerTransaction transaction = LedgerTransaction.forPayment(
+                paymentId,
+                type,
+                currency,
+                reference
+        );
 
         LedgerTransaction savedTransaction =
                 transactionRepository.saveAndFlush(transaction);
@@ -66,8 +65,25 @@ public class LedgerService {
         validateBalanced(entries);
 
         entryRepository.saveAll(entries);
+    }
 
-        return savedTransaction;
+    @Transactional(readOnly = true)
+    public List<LedgerTransactionResponse> getPaymentLedger(UUID paymentId) {
+        return transactionRepository
+                .findAllByPaymentIdOrderByCreatedAtAsc(paymentId)
+                .stream()
+                .map(transaction -> {
+                    List<LedgerEntry> entries = entryRepository
+                            .findAllByLedgerTransactionIdOrderByCreatedAtAsc(
+                                    transaction.getId()
+                            );
+
+                    return LedgerTransactionResponse.from(
+                            transaction,
+                            entries
+                    );
+                })
+                .toList();
     }
 
     private void validateBalanced(List<LedgerEntry> entries) {
