@@ -1,0 +1,117 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-outbox-event
+      author: lukasz756
+      changes:
+        - createTable:
+            tableName: outbox_event
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_outbox_event
+
+              - column:
+                  name: aggregate_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: aggregate_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: event_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: payload
+                  type: TEXT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: attempt_count
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: available_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: published_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+              - column:
+                  name: last_error
+                  type: TEXT
+
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - sql:
+            sql: >
+              ALTER TABLE outbox_event
+              ADD CONSTRAINT ck_outbox_event_status
+              CHECK (status IN ('PENDING', 'PUBLISHED', 'FAILED'))
+
+        - sql:
+            sql: >
+              ALTER TABLE outbox_event
+              ADD CONSTRAINT ck_outbox_event_attempt_count
+              CHECK (attempt_count >= 0)
+
+        - createIndex:
+            tableName: outbox_event
+            indexName: idx_outbox_event_status_available_created
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: available_at
+              - column:
+                  name: created_at
+
+        - createIndex:
+            tableName: outbox_event
+            indexName: idx_outbox_event_aggregate_created
+            columns:
+              - column:
+                  name: aggregate_type
+              - column:
+                  name: aggregate_id
+              - column:
+                  name: created_at

@@ -6,6 +6,8 @@ import io.github.lukasz756.marspay.paymentnode.account.exceptions.BalanceAccount
 import io.github.lukasz756.marspay.paymentnode.ledger.LedgerBalanceBucket;
 import io.github.lukasz756.marspay.paymentnode.ledger.LedgerService;
 import io.github.lukasz756.marspay.paymentnode.ledger.LedgerTransactionType;
+import io.github.lukasz756.marspay.paymentnode.outbox.OutboxEventType;
+import io.github.lukasz756.marspay.paymentnode.outbox.OutboxService;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentAlreadyExistsException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentCurrencyMismatchException;
 import io.github.lukasz756.marspay.paymentnode.payment.exceptions.PaymentNotFoundException;
@@ -22,12 +24,18 @@ public class PaymentService {
     private final BalanceAccountRepository balanceAccountRepository;
     private final PaymentOperationRepository paymentOperationRepository;
     private final LedgerService ledgerService;
+    private final OutboxService outboxService;
 
-    public PaymentService(PaymentRepository paymentRepository, BalanceAccountRepository balanceAccountRepository, PaymentOperationRepository paymentOperationRepository, LedgerService ledgerService) {
+    PaymentService(PaymentRepository paymentRepository,
+                          BalanceAccountRepository balanceAccountRepository,
+                          PaymentOperationRepository paymentOperationRepository,
+                          LedgerService ledgerService,
+                          OutboxService outboxService) {
         this.paymentRepository = paymentRepository;
         this.balanceAccountRepository = balanceAccountRepository;
         this.paymentOperationRepository = paymentOperationRepository;
         this.ledgerService = ledgerService;
+        this.outboxService = outboxService;
     }
 
     @Transactional
@@ -64,9 +72,14 @@ public class PaymentService {
                     payment.getReference()
             );
         }
-        Payment savedPayment = paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.saveAndFlush(payment);
 
         recordOperation(savedPayment, PaymentOperationType.CREATE);
+
+        outboxService.recordPaymentEvent(
+                savedPayment,
+                OutboxEventType.PAYMENT_CREATED
+        );
 
         return savedPayment;
     }
@@ -97,6 +110,11 @@ public class PaymentService {
                 sourceAccount.getId(),
                 LedgerBalanceBucket.RESERVED,
                 payment.getAmountMinor()
+        );
+
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_AUTHORIZED
         );
 
         return payment;
@@ -143,6 +161,11 @@ public class PaymentService {
                 payment.getAmountMinor()
         );
 
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_CAPTURED
+        );
+
         return payment;
     }
 
@@ -179,6 +202,11 @@ public class PaymentService {
         }
 
         recordOperation(payment, PaymentOperationType.CANCEL);
+
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_CANCELLED
+        );
 
         return payment;
     }
@@ -218,6 +246,10 @@ public class PaymentService {
                 payment.getAmountMinor()
         );
 
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_REFUNDED
+        );
         return payment;
     }
 

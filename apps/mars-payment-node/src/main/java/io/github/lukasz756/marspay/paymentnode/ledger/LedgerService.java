@@ -13,7 +13,7 @@ public class LedgerService {
     private final LedgerTransactionRepository transactionRepository;
     private final LedgerEntryRepository entryRepository;
 
-    public LedgerService(
+    LedgerService(
             LedgerTransactionRepository transactionRepository,
             LedgerEntryRepository entryRepository
     ) {
