@@ -36,7 +36,7 @@ public class Payment {
     private String reference;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private PaymentStatus status;
 
     @Version
@@ -123,18 +123,6 @@ public class Payment {
         );
     }
 
-    public void authorize() {
-        if (status != PaymentStatus.CREATED) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CREATED
-            );
-        }
-
-        status = PaymentStatus.AUTHORIZED;
-    }
-
     public void capture() {
         if (status != PaymentStatus.AUTHORIZED) {
             throw new PaymentInvalidStatusException(
@@ -171,6 +159,42 @@ public class Payment {
         }
 
         status = PaymentStatus.REFUNDED;
+    }
+
+    public void requestAuthorization() {
+        if (status != PaymentStatus.CREATED) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.CREATED
+            );
+        }
+
+        status = PaymentStatus.AUTHORIZATION_PENDING;
+    }
+
+    public void confirmAuthorization() {
+        if (status != PaymentStatus.AUTHORIZATION_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.AUTHORIZATION_PENDING
+            );
+        }
+
+        status = PaymentStatus.AUTHORIZED;
+    }
+
+    public void declineAuthorization() {
+        if (status != PaymentStatus.AUTHORIZATION_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.AUTHORIZATION_PENDING
+            );
+        }
+
+        status = PaymentStatus.DECLINED;
     }
 
     public UUID getId() {

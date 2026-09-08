@@ -25,7 +25,7 @@ public class PaymentOperation {
     private UUID paymentId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, updatable = false, length = 20)
+    @Column(nullable = false, updatable = false, length = 30)
     private PaymentOperationType type;
 
     @Column(name = "amount_minor", nullable = false, updatable = false)

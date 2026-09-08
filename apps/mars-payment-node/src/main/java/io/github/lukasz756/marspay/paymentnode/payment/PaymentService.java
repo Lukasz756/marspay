@@ -85,7 +85,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment authorizePayment(UUID paymentId) {
+    public Payment requestAuthorization(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
@@ -95,10 +95,13 @@ public class PaymentService {
                         payment.getSourceBalanceAccountId()
                 ));
 
-        payment.authorize();
+        payment.requestAuthorization();
         sourceAccount.reserve(payment.getAmountMinor());
 
-        recordOperation(payment, PaymentOperationType.AUTHORIZE);
+        recordOperation(
+                payment,
+                PaymentOperationType.AUTHORIZATION_REQUESTED
+        );
 
         ledgerService.recordPaymentMovement(
                 payment.getId(),
@@ -114,7 +117,7 @@ public class PaymentService {
 
         outboxService.recordPaymentEvent(
                 payment,
-                OutboxEventType.PAYMENT_AUTHORIZED
+                OutboxEventType.PAYMENT_AUTHORIZATION_REQUESTED
         );
 
         return payment;
@@ -263,6 +266,54 @@ public class PaymentService {
                 .findAllByPaymentIdOrderByCreatedAtAsc(paymentId);
     }
 
+    @Transactional
+    public Payment confirmAuthorization(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.confirmAuthorization();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.AUTHORIZATION_CONFIRMED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment declineAuthorization(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        BalanceAccount sourceAccount = balanceAccountRepository
+                .findById(payment.getSourceBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getSourceBalanceAccountId()
+                ));
+
+        payment.declineAuthorization();
+        sourceAccount.releaseReserved(payment.getAmountMinor());
+
+        recordOperation(
+                payment,
+                PaymentOperationType.AUTHORIZATION_DECLINED
+        );
+
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_AUTHORIZATION_DECLINED,
+                payment.getCurrency(),
+                payment.getReference(),
+                sourceAccount.getId(),
+                LedgerBalanceBucket.RESERVED,
+                sourceAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
+
+        return payment;
+    }
 
     private void recordOperation(
             Payment payment,

@@ -30,3 +30,11 @@ databaseChangeLog:
   - include:
       file: changes/008-create-outbox-event.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/009-extend-payment-status.yaml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/010-create-inbox-event.yaml
+      relativeToChangelogFile: true

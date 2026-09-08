@@ -70,12 +70,15 @@ public class PaymentController {
     }
 
     @PostMapping("/{paymentId}/authorize")
-    public ResponseEntity<PaymentResponse> authorizePayment(
+    public ResponseEntity<PaymentResponse> requestAuthorization(
             @PathVariable UUID paymentId
     ) {
-        Payment payment = paymentService.authorizePayment(paymentId);
+        Payment payment =
+                paymentService.requestAuthorization(paymentId);
 
-        return ResponseEntity.ok(PaymentResponse.from(payment));
+        return ResponseEntity
+                .accepted()
+                .body(PaymentResponse.from(payment));
     }
 
     @PostMapping("/{paymentId}/capture")

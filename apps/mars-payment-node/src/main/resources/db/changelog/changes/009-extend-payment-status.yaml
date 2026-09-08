@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-extend-payment-status
+      author: lukasz756
+      changes:
+        - modifyDataType:
+            tableName: payment
+            columnName: status
+            newDataType: VARCHAR(30)
+
+        - modifyDataType:
+            tableName: payment_operation
+            columnName: type
+            newDataType: VARCHAR(30)
