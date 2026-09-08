@@ -123,7 +123,7 @@ public class Payment {
         );
     }
 
-    public void capture() {
+    public void requestCapture() {
         if (status != PaymentStatus.AUTHORIZED) {
             throw new PaymentInvalidStatusException(
                     id,
@@ -132,24 +132,70 @@ public class Payment {
             );
         }
 
-        status = PaymentStatus.CAPTURED;
+        status = PaymentStatus.CAPTURE_PENDING;
     }
 
-    public void cancel() {
-        if (status != PaymentStatus.CREATED
-                && status != PaymentStatus.AUTHORIZED) {
+    public void confirmCapture() {
+        if (status != PaymentStatus.CAPTURE_PENDING) {
             throw new PaymentInvalidStatusException(
                     id,
                     status,
-                    PaymentStatus.CREATED,
+                    PaymentStatus.CAPTURE_PENDING
+            );
+        }
+
+        status = PaymentStatus.CAPTURED;
+    }
+
+    public void failCapture() {
+        if (status != PaymentStatus.CAPTURE_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.CAPTURE_PENDING
+            );
+        }
+
+        status = PaymentStatus.AUTHORIZED;
+    }
+
+    public void requestCancel() {
+        if (status != PaymentStatus.AUTHORIZED) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
                     PaymentStatus.AUTHORIZED
+            );
+        }
+
+        status = PaymentStatus.CANCEL_PENDING;
+    }
+
+    public void confirmCancel() {
+        if (status != PaymentStatus.CANCEL_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.CANCEL_PENDING
             );
         }
 
         status = PaymentStatus.CANCELLED;
     }
 
-    public void refund() {
+    public void failCancel() {
+        if (status != PaymentStatus.CANCEL_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.CANCEL_PENDING
+            );
+        }
+
+        status = PaymentStatus.AUTHORIZED;
+    }
+
+    public void requestRefund() {
         if (status != PaymentStatus.CAPTURED) {
             throw new PaymentInvalidStatusException(
                     id,
@@ -158,7 +204,31 @@ public class Payment {
             );
         }
 
+        status = PaymentStatus.REFUND_PENDING;
+    }
+
+    public void confirmRefund() {
+        if (status != PaymentStatus.REFUND_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.REFUND_PENDING
+            );
+        }
+
         status = PaymentStatus.REFUNDED;
+    }
+
+    public void failRefund() {
+        if (status != PaymentStatus.REFUND_PENDING) {
+            throw new PaymentInvalidStatusException(
+                    id,
+                    status,
+                    PaymentStatus.REFUND_PENDING
+            );
+        }
+
+        status = PaymentStatus.CAPTURED;
     }
 
     public void requestAuthorization() {

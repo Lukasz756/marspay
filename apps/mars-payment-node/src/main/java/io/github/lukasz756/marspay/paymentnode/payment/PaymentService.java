@@ -27,10 +27,10 @@ public class PaymentService {
     private final OutboxService outboxService;
 
     PaymentService(PaymentRepository paymentRepository,
-                          BalanceAccountRepository balanceAccountRepository,
-                          PaymentOperationRepository paymentOperationRepository,
-                          LedgerService ledgerService,
-                          OutboxService outboxService) {
+                   BalanceAccountRepository balanceAccountRepository,
+                   PaymentOperationRepository paymentOperationRepository,
+                   LedgerService ledgerService,
+                   OutboxService outboxService) {
         this.paymentRepository = paymentRepository;
         this.balanceAccountRepository = balanceAccountRepository;
         this.paymentOperationRepository = paymentOperationRepository;
@@ -123,149 +123,6 @@ public class PaymentService {
         return payment;
     }
 
-    @Transactional(readOnly = true)
-    public Payment getPayment(UUID paymentId) {
-        return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
-    }
-
-    @Transactional
-    public Payment capturePayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
-
-        BalanceAccount sourceAccount = balanceAccountRepository
-                .findById(payment.getSourceBalanceAccountId())
-                .orElseThrow(() -> new BalanceAccountNotFoundException(
-                        payment.getSourceBalanceAccountId()
-                ));
-
-        BalanceAccount targetAccount = balanceAccountRepository
-                .findById(payment.getTargetBalanceAccountId())
-                .orElseThrow(() -> new BalanceAccountNotFoundException(
-                        payment.getTargetBalanceAccountId()
-                ));
-
-        payment.capture();
-        sourceAccount.captureReserved(payment.getAmountMinor());
-        targetAccount.credit(payment.getAmountMinor());
-
-        recordOperation(payment, PaymentOperationType.CAPTURE);
-
-        ledgerService.recordPaymentMovement(
-                payment.getId(),
-                LedgerTransactionType.PAYMENT_CAPTURE,
-                payment.getCurrency(),
-                payment.getReference(),
-                sourceAccount.getId(),
-                LedgerBalanceBucket.RESERVED,
-                targetAccount.getId(),
-                LedgerBalanceBucket.AVAILABLE,
-                payment.getAmountMinor()
-        );
-
-        outboxService.recordPaymentEvent(
-                payment,
-                OutboxEventType.PAYMENT_CAPTURED
-        );
-
-        return payment;
-    }
-
-    @Transactional
-    public Payment cancelPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
-
-        boolean wasAuthorized =
-                payment.getStatus() == PaymentStatus.AUTHORIZED;
-
-        payment.cancel();
-
-        if (wasAuthorized) {
-            BalanceAccount sourceAccount = balanceAccountRepository
-                    .findById(payment.getSourceBalanceAccountId())
-                    .orElseThrow(() -> new BalanceAccountNotFoundException(
-                            payment.getSourceBalanceAccountId()
-                    ));
-
-            sourceAccount.releaseReserved(payment.getAmountMinor());
-
-            ledgerService.recordPaymentMovement(
-                    payment.getId(),
-                    LedgerTransactionType.PAYMENT_CANCEL,
-                    payment.getCurrency(),
-                    payment.getReference(),
-                    sourceAccount.getId(),
-                    LedgerBalanceBucket.RESERVED,
-                    sourceAccount.getId(),
-                    LedgerBalanceBucket.AVAILABLE,
-                    payment.getAmountMinor()
-            );
-        }
-
-        recordOperation(payment, PaymentOperationType.CANCEL);
-
-        outboxService.recordPaymentEvent(
-                payment,
-                OutboxEventType.PAYMENT_CANCELLED
-        );
-
-        return payment;
-    }
-
-    @Transactional
-    public Payment refundPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
-
-        BalanceAccount sourceAccount = balanceAccountRepository
-                .findById(payment.getSourceBalanceAccountId())
-                .orElseThrow(() -> new BalanceAccountNotFoundException(
-                        payment.getSourceBalanceAccountId()
-                ));
-
-        BalanceAccount targetAccount = balanceAccountRepository
-                .findById(payment.getTargetBalanceAccountId())
-                .orElseThrow(() -> new BalanceAccountNotFoundException(
-                        payment.getTargetBalanceAccountId()
-                ));
-
-        payment.refund();
-        targetAccount.debit(payment.getAmountMinor());
-        sourceAccount.credit(payment.getAmountMinor());
-
-        recordOperation(payment, PaymentOperationType.REFUND);
-
-        ledgerService.recordPaymentMovement(
-                payment.getId(),
-                LedgerTransactionType.PAYMENT_REFUND,
-                payment.getCurrency(),
-                payment.getReference(),
-                targetAccount.getId(),
-                LedgerBalanceBucket.AVAILABLE,
-                sourceAccount.getId(),
-                LedgerBalanceBucket.AVAILABLE,
-                payment.getAmountMinor()
-        );
-
-        outboxService.recordPaymentEvent(
-                payment,
-                OutboxEventType.PAYMENT_REFUNDED
-        );
-        return payment;
-    }
-
-    @Transactional(readOnly = true)
-    public List<PaymentOperation> getPaymentOperations(UUID paymentId) {
-        if (!paymentRepository.existsById(paymentId)) {
-            throw new PaymentNotFoundException(paymentId);
-        }
-
-        return paymentOperationRepository
-                .findAllByPaymentIdOrderByCreatedAtAsc(paymentId);
-    }
-
     @Transactional
     public Payment confirmAuthorization(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -313,6 +170,243 @@ public class PaymentService {
         );
 
         return payment;
+    }
+
+    @Transactional(readOnly = true)
+    public Payment getPayment(UUID paymentId) {
+        return paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+    }
+
+    @Transactional
+    public Payment requestCapture(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.requestCapture();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CAPTURE_REQUESTED
+        );
+
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_CAPTURE_REQUESTED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment confirmCapture(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        BalanceAccount sourceAccount = balanceAccountRepository
+                .findById(payment.getSourceBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getSourceBalanceAccountId()
+                ));
+
+        BalanceAccount targetAccount = balanceAccountRepository
+                .findById(payment.getTargetBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getTargetBalanceAccountId()
+                ));
+
+        payment.confirmCapture();
+        sourceAccount.captureReserved(payment.getAmountMinor());
+        targetAccount.credit(payment.getAmountMinor());
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CAPTURE_CONFIRMED
+        );
+
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_CAPTURE,
+                payment.getCurrency(),
+                payment.getReference(),
+                sourceAccount.getId(),
+                LedgerBalanceBucket.RESERVED,
+                targetAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment failCapture(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.failCapture();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CAPTURE_FAILED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment requestCancel(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.requestCancel();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CANCEL_REQUESTED
+        );
+
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_CANCEL_REQUESTED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment confirmCancel(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        BalanceAccount sourceAccount = balanceAccountRepository
+                .findById(payment.getSourceBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getSourceBalanceAccountId()
+                ));
+
+        payment.confirmCancel();
+        sourceAccount.releaseReserved(payment.getAmountMinor());
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CANCEL_CONFIRMED
+        );
+
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_CANCEL,
+                payment.getCurrency(),
+                payment.getReference(),
+                sourceAccount.getId(),
+                LedgerBalanceBucket.RESERVED,
+                sourceAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment failCancel(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.failCancel();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.CANCEL_FAILED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment requestRefund(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.requestRefund();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.REFUND_REQUESTED
+        );
+
+        outboxService.recordPaymentEvent(
+                payment,
+                OutboxEventType.PAYMENT_REFUND_REQUESTED
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment confirmRefund(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        BalanceAccount sourceAccount = balanceAccountRepository
+                .findById(payment.getSourceBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getSourceBalanceAccountId()
+                ));
+
+        BalanceAccount targetAccount = balanceAccountRepository
+                .findById(payment.getTargetBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getTargetBalanceAccountId()
+                ));
+
+        payment.confirmRefund();
+        targetAccount.debit(payment.getAmountMinor());
+        sourceAccount.credit(payment.getAmountMinor());
+
+        recordOperation(
+                payment,
+                PaymentOperationType.REFUND_CONFIRMED
+        );
+
+        ledgerService.recordPaymentMovement(
+                payment.getId(),
+                LedgerTransactionType.PAYMENT_REFUND,
+                payment.getCurrency(),
+                payment.getReference(),
+                targetAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                sourceAccount.getId(),
+                LedgerBalanceBucket.AVAILABLE,
+                payment.getAmountMinor()
+        );
+
+        return payment;
+    }
+
+    @Transactional
+    public Payment failRefund(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        payment.failRefund();
+
+        recordOperation(
+                payment,
+                PaymentOperationType.REFUND_FAILED
+        );
+
+        return payment;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentOperation> getPaymentOperations(UUID paymentId) {
+        if (!paymentRepository.existsById(paymentId)) {
+            throw new PaymentNotFoundException(paymentId);
+        }
+
+        return paymentOperationRepository
+                .findAllByPaymentIdOrderByCreatedAtAsc(paymentId);
     }
 
     private void recordOperation(

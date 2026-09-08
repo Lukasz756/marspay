@@ -1,7 +1,6 @@
 package io.github.lukasz756.marspay.paymentnode.inbox;
 
 import io.github.lukasz756.marspay.paymentnode.payment.PaymentService;
-import io.github.lukasz756.marspay.paymentnode.payment.PaymentStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,20 +31,50 @@ class PaymentInboxEventHandler {
     public void handle(InboxEvent event) {
         validateEnvelope(event);
 
-        PaymentAuthorizationResultPayload payload =
+        PaymentResultPayload payload =
                 deserializePayload(event);
 
         validatePayload(event, payload);
 
         switch (event.getEventType()) {
             case "PAYMENT_AUTHORIZED" -> {
-                requireStatus(payload, PaymentStatus.AUTHORIZED);
+                requireStatus(payload, "AUTHORIZED");
                 paymentService.confirmAuthorization(payload.paymentId());
             }
 
             case "PAYMENT_DECLINED" -> {
-                requireStatus(payload, PaymentStatus.DECLINED);
+                requireStatus(payload, "DECLINED");
                 paymentService.declineAuthorization(payload.paymentId());
+            }
+
+            case "PAYMENT_CAPTURED" -> {
+                requireStatus(payload, "CAPTURED");
+                paymentService.confirmCapture(payload.paymentId());
+            }
+
+            case "PAYMENT_CAPTURE_FAILED" -> {
+                requireStatus(payload, "CAPTURE_FAILED");
+                paymentService.failCapture(payload.paymentId());
+            }
+
+            case "PAYMENT_CANCELLED" -> {
+                requireStatus(payload, "CANCELLED");
+                paymentService.confirmCancel(payload.paymentId());
+            }
+
+            case "PAYMENT_CANCEL_FAILED" -> {
+                requireStatus(payload, "CANCEL_FAILED");
+                paymentService.failCancel(payload.paymentId());
+            }
+
+            case "PAYMENT_REFUNDED" -> {
+                requireStatus(payload, "REFUNDED");
+                paymentService.confirmRefund(payload.paymentId());
+            }
+
+            case "PAYMENT_REFUND_FAILED" -> {
+                requireStatus(payload, "REFUND_FAILED");
+                paymentService.failRefund(payload.paymentId());
             }
 
             default -> throw new IllegalArgumentException(
@@ -71,13 +100,13 @@ class PaymentInboxEventHandler {
         }
     }
 
-    private PaymentAuthorizationResultPayload deserializePayload(
+    private PaymentResultPayload deserializePayload(
             InboxEvent event
     ) {
         try {
             return objectMapper.readValue(
                     event.getPayload(),
-                    PaymentAuthorizationResultPayload.class
+                    PaymentResultPayload.class
             );
         } catch (JacksonException exception) {
             throw new IllegalArgumentException(
@@ -90,7 +119,7 @@ class PaymentInboxEventHandler {
 
     private void validatePayload(
             InboxEvent event,
-            PaymentAuthorizationResultPayload payload
+            PaymentResultPayload payload
     ) {
         if (payload.schemaVersion() != 1) {
             throw new IllegalArgumentException(
@@ -111,9 +140,9 @@ class PaymentInboxEventHandler {
             );
         }
 
-        if (payload.status() == null) {
+        if (payload.status() == null || payload.status().isBlank()) {
             throw new IllegalArgumentException(
-                    "Payment event status must not be null"
+                    "Payment event status must not be blank"
             );
         }
 
@@ -125,10 +154,10 @@ class PaymentInboxEventHandler {
     }
 
     private void requireStatus(
-            PaymentAuthorizationResultPayload payload,
-            PaymentStatus expectedStatus
+            PaymentResultPayload payload,
+            String expectedStatus
     ) {
-        if (payload.status() != expectedStatus) {
+        if (!expectedStatus.equals(payload.status())) {
             throw new IllegalArgumentException(
                     "Payment event status "
                             + payload.status()

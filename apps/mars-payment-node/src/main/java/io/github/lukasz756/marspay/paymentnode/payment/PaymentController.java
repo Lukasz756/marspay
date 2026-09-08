@@ -82,30 +82,39 @@ public class PaymentController {
     }
 
     @PostMapping("/{paymentId}/capture")
-    public ResponseEntity<PaymentResponse> capturePayment(
+    public ResponseEntity<PaymentResponse> requestCapture(
             @PathVariable UUID paymentId
     ) {
-        Payment payment = paymentService.capturePayment(paymentId);
+        Payment payment =
+                paymentService.requestCapture(paymentId);
 
-        return ResponseEntity.ok(PaymentResponse.from(payment));
+        return ResponseEntity
+                .accepted()
+                .body(PaymentResponse.from(payment));
     }
 
     @PostMapping("/{paymentId}/cancel")
-    public ResponseEntity<PaymentResponse> cancelPayment(
+    public ResponseEntity<PaymentResponse> requestCancel(
             @PathVariable UUID paymentId
     ) {
-        Payment payment = paymentService.cancelPayment(paymentId);
+        Payment payment =
+                paymentService.requestCancel(paymentId);
 
-        return ResponseEntity.ok(PaymentResponse.from(payment));
+        return ResponseEntity
+                .accepted()
+                .body(PaymentResponse.from(payment));
     }
 
     @PostMapping("/{paymentId}/refund")
-    public ResponseEntity<PaymentResponse> refundPayment(
+    public ResponseEntity<PaymentResponse> requestRefund(
             @PathVariable UUID paymentId
     ) {
-        Payment payment = paymentService.refundPayment(paymentId);
+        Payment payment =
+                paymentService.requestRefund(paymentId);
 
-        return ResponseEntity.ok(PaymentResponse.from(payment));
+        return ResponseEntity
+                .accepted()
+                .body(PaymentResponse.from(payment));
     }
 
     @GetMapping("/{paymentId}/operations")

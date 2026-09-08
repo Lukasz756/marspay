@@ -1,14 +1,12 @@
 package io.github.lukasz756.marspay.paymentnode.inbox;
 
-import io.github.lukasz756.marspay.paymentnode.payment.PaymentStatus;
-
 import java.time.Instant;
 import java.util.UUID;
 
-public record PaymentAuthorizationResultPayload(
+public record PaymentResultPayload(
         int schemaVersion,
         UUID paymentId,
-        PaymentStatus status,
+        String status,
         String reason,
         Instant occurredAt
 ) {
