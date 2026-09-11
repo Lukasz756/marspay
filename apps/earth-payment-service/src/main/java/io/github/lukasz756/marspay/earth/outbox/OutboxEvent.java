@@ -1,4 +1,4 @@
-package io.github.lukasz756.marspay.paymentnode.inbox;
+package io.github.lukasz756.marspay.earth.outbox;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,41 +8,44 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "inbox_event")
-public class InboxEvent {
+@Table(name = "outbox_event")
+public class OutboxEvent {
 
     @Id
-    @Column(name = "event_id", nullable = false, updatable = false)
-    private UUID eventId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(nullable = false, updatable = false, length = 50)
-    private String source;
-
+    @Enumerated(EnumType.STRING)
     @Column(
             name = "aggregate_type",
             nullable = false,
             updatable = false,
             length = 50
     )
-    private String aggregateType;
+    private OutboxAggregateType aggregateType;
 
-    @Column(name = "aggregate_id", nullable = false, updatable = false)
+    @Column(
+            name = "aggregate_id",
+            nullable = false,
+            updatable = false
+    )
     private UUID aggregateId;
 
+    @Enumerated(EnumType.STRING)
     @Column(
             name = "event_type",
             nullable = false,
             updatable = false,
             length = 50
     )
-    private String eventType;
+    private OutboxEventType eventType;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TEXT")
     private String payload;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private InboxEventStatus status;
+    private OutboxEventStatus status;
 
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
@@ -50,8 +53,8 @@ public class InboxEvent {
     @Column(name = "available_at", nullable = false)
     private Instant availableAt;
 
-    @Column(name = "processed_at")
-    private Instant processedAt;
+    @Column(name = "published_at")
+    private Instant publishedAt;
 
     @Column(name = "last_error", columnDefinition = "TEXT")
     private String lastError;
@@ -61,101 +64,80 @@ public class InboxEvent {
     private long version;
 
     @CreationTimestamp
-    @Column(name = "received_at", nullable = false, updatable = false)
-    private Instant receivedAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected InboxEvent() {
+    protected OutboxEvent() {
     }
 
-    private InboxEvent(
-            UUID eventId,
-            String source,
-            String aggregateType,
+    private OutboxEvent(
+            OutboxAggregateType aggregateType,
             UUID aggregateId,
-            String eventType,
+            OutboxEventType eventType,
             String payload
     ) {
-        if (eventId == null) {
+        if (aggregateType == null) {
             throw new IllegalArgumentException(
-                    "Inbox event id must not be null"
-            );
-        }
-
-        if (source == null || source.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox event source must not be blank"
-            );
-        }
-
-        if (aggregateType == null || aggregateType.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox aggregate type must not be blank"
+                    "Outbox aggregate type must not be null"
             );
         }
 
         if (aggregateId == null) {
             throw new IllegalArgumentException(
-                    "Inbox aggregate id must not be null"
+                    "Outbox aggregate id must not be null"
             );
         }
 
-        if (eventType == null || eventType.isBlank()) {
+        if (eventType == null) {
             throw new IllegalArgumentException(
-                    "Inbox event type must not be blank"
+                    "Outbox event type must not be null"
             );
         }
 
         if (payload == null || payload.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox payload must not be blank"
+                    "Outbox payload must not be blank"
             );
         }
 
-        this.eventId = eventId;
-        this.source = source.trim();
-        this.aggregateType = aggregateType.trim();
+        this.aggregateType = aggregateType;
         this.aggregateId = aggregateId;
-        this.eventType = eventType.trim();
+        this.eventType = eventType;
         this.payload = payload;
-        this.status = InboxEventStatus.PENDING;
+        this.status = OutboxEventStatus.PENDING;
         this.attemptCount = 0;
         this.availableAt = Instant.now();
     }
 
-    public static InboxEvent pending(
-            UUID eventId,
-            String source,
-            String aggregateType,
-            UUID aggregateId,
-            String eventType,
+    public static OutboxEvent pendingPayment(
+            UUID paymentId,
+            OutboxEventType eventType,
             String payload
     ) {
-        return new InboxEvent(
-                eventId,
-                source,
-                aggregateType,
-                aggregateId,
+        return new OutboxEvent(
+                OutboxAggregateType.PAYMENT,
+                paymentId,
                 eventType,
                 payload
         );
     }
 
-    public void markProcessed(Instant processedAt) {
+    public void markPublished(Instant publishedAt) {
         requirePendingStatus();
 
-        if (processedAt == null) {
+        if (publishedAt == null) {
             throw new IllegalArgumentException(
-                    "Processed at must not be null"
+                    "Published at must not be null"
             );
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
-        this.status = InboxEventStatus.PROCESSED;
-        this.processedAt = processedAt;
+        this.status = OutboxEventStatus.PUBLISHED;
+        this.publishedAt = publishedAt;
         this.lastError = null;
     }
 
@@ -168,7 +150,7 @@ public class InboxEvent {
 
         if (error == null || error.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox error must not be blank"
+                    "Outbox error must not be blank"
             );
         }
 
@@ -188,29 +170,25 @@ public class InboxEvent {
         this.lastError = error.trim();
 
         if (attemptCount >= maxAttempts) {
-            this.status = InboxEventStatus.FAILED;
+            this.status = OutboxEventStatus.FAILED;
         } else {
             this.availableAt = nextAttemptAt;
         }
     }
 
     private void requirePendingStatus() {
-        if (status != InboxEventStatus.PENDING) {
+        if (status != OutboxEventStatus.PENDING) {
             throw new IllegalStateException(
-                    "Only pending inbox events can be processed"
+                    "Only pending outbox events can be processed"
             );
         }
     }
 
-    public UUID getEventId() {
-        return eventId;
+    public UUID getId() {
+        return id;
     }
 
-    public String getSource() {
-        return source;
-    }
-
-    public String getAggregateType() {
+    public OutboxAggregateType getAggregateType() {
         return aggregateType;
     }
 
@@ -218,7 +196,7 @@ public class InboxEvent {
         return aggregateId;
     }
 
-    public String getEventType() {
+    public OutboxEventType getEventType() {
         return eventType;
     }
 
@@ -226,7 +204,7 @@ public class InboxEvent {
         return payload;
     }
 
-    public InboxEventStatus getStatus() {
+    public OutboxEventStatus getStatus() {
         return status;
     }
 
@@ -238,8 +216,8 @@ public class InboxEvent {
         return availableAt;
     }
 
-    public Instant getProcessedAt() {
-        return processedAt;
+    public Instant getPublishedAt() {
+        return publishedAt;
     }
 
     public String getLastError() {
@@ -250,8 +228,8 @@ public class InboxEvent {
         return version;
     }
 
-    public Instant getReceivedAt() {
-        return receivedAt;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
     public Instant getUpdatedAt() {

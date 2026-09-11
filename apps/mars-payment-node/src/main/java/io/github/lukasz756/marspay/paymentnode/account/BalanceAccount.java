@@ -69,8 +69,10 @@ public class BalanceAccount {
 
         String normalizedCurrency = currency.trim().toUpperCase(Locale.ROOT);
 
-        if (!normalizedCurrency.matches("[A-Z]{3}")) {
-            throw new IllegalArgumentException("Currency must contain exactly three letters");
+        if (!normalizedCurrency.equals("MCR")) {
+            throw new IllegalArgumentException(
+                    "Currency must be MCR"
+            );
         }
 
         this.accountHolderId = accountHolderId;

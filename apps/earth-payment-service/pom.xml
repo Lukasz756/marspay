@@ -12,11 +12,11 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mars-payment-node</artifactId>
+    <artifactId>earth-payment-service</artifactId>
     <packaging>jar</packaging>
 
-    <name>Mars Payment Node</name>
-    <description>Local payment processing node for Martian colonies</description>
+    <name>Earth Payment Service</name>
+    <description>Earth-side payment processing service for MarsPay</description>
 
     <dependencies>
         <dependency>

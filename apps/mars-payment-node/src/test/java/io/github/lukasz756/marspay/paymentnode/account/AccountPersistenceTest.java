@@ -15,6 +15,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @DataJpaTest
 @Testcontainers
@@ -62,7 +63,7 @@ class AccountPersistenceTest {
         AccountHolder accountHolder = AccountHolder.create(HOLDER_001, AccountHolderType.PERSON);
         accountHolderRepository.saveAndFlush(accountHolder);
         AccountHolder accHolderFromRepo = accountHolderRepository.findById(accountHolder.getId()).orElseThrow();
-        BalanceAccount balanceAccount = BalanceAccount.open(accHolderFromRepo.getId(), "EUR");
+        BalanceAccount balanceAccount = BalanceAccount.open(accHolderFromRepo.getId(), "MCR");
         balanceAccountRepository.saveAndFlush(balanceAccount);
         entityManager.clear();
         UUID balanceAccountId = balanceAccount.getId();
@@ -71,12 +72,23 @@ class AccountPersistenceTest {
         assertThat(balanceAccountFromRepo.getId()).isNotNull();
         assertThat(balanceAccountFromRepo.getId()).isEqualTo(balanceAccountId);
         assertThat(balanceAccountFromRepo.getAccountHolderId()).isEqualTo(accHolderFromRepo.getId());
-        assertThat(balanceAccountFromRepo.getCurrency()).isEqualTo("EUR");
+        assertThat(balanceAccountFromRepo.getCurrency()).isEqualTo("MCR");
         assertThat(balanceAccountFromRepo.getAvailableBalanceMinor()).isEqualTo(0);
         assertThat(balanceAccountFromRepo.getReservedBalanceMinor()).isEqualTo(0);
         assertThat(balanceAccountFromRepo.getStatus()).isEqualTo(BalanceAccountStatus.ACTIVE);
         assertThat(balanceAccountFromRepo.getCreatedAt()).isNotNull();
         assertThat(balanceAccountFromRepo.getUpdatedAt()).isNotNull();
         assertThat(balanceAccountFromRepo.getVersion()).isZero();
+    }
+
+    @Test
+    void rejectsUnsupportedCurrency() {
+        UUID accountHolderId = UUID.randomUUID();
+
+        assertThatThrownBy(
+                () -> BalanceAccount.open(accountHolderId, "EUR")
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Currency must be MCR");
     }
 }

@@ -1,5 +1,11 @@
 spring:
+  config:
+    import: "optional:file:./.env[.properties]"
+
   datasource:
-    url: jdbc:postgresql://localhost:${MARSPAY_MARS_DB_PORT:5432}/${MARSPAY_MARS_DB_NAME:marspay_mars}
-    username: ${MARSPAY_MARS_DB_USERNAME:marspay}
-    password: ${MARSPAY_MARS_DB_PASSWORD}
+    url: "jdbc:postgresql://localhost:${MARSPAY_MARS_DB_PORT}/${MARSPAY_MARS_DB_NAME}"
+    username: "${MARSPAY_MARS_DB_USERNAME}"
+    password: "${MARSPAY_MARS_DB_PASSWORD}"
+
+server:
+  port: "${MARSPAY_MARS_HTTP_PORT}"

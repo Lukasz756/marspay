@@ -6,8 +6,8 @@ import jakarta.validation.constraints.Pattern;
 public record OpenBalanceAccountRequest(
         @NotBlank
         @Pattern(
-                regexp = "[A-Za-z]{3}",
-                message = "Currency must contain exactly three letters"
+                regexp = "(?i)MCR",
+                message = "Currency must be MCR"
         )
         String currency
 ) {

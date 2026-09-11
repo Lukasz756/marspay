@@ -1,6 +1,12 @@
-package io.github.lukasz756.marspay.paymentnode.inbox;
+package io.github.lukasz756.marspay.relay.message;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -8,8 +14,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "inbox_event")
-public class InboxEvent {
+@Table(name = "relay_message")
+public class RelayMessage {
 
     @Id
     @Column(name = "event_id", nullable = false, updatable = false)
@@ -17,6 +23,9 @@ public class InboxEvent {
 
     @Column(nullable = false, updatable = false, length = 50)
     private String source;
+
+    @Column(nullable = false, updatable = false, length = 50)
+    private String destination;
 
     @Column(
             name = "aggregate_type",
@@ -42,7 +51,7 @@ public class InboxEvent {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private InboxEventStatus status;
+    private RelayMessageStatus status;
 
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
@@ -50,8 +59,8 @@ public class InboxEvent {
     @Column(name = "available_at", nullable = false)
     private Instant availableAt;
 
-    @Column(name = "processed_at")
-    private Instant processedAt;
+    @Column(name = "delivered_at")
+    private Instant deliveredAt;
 
     @Column(name = "last_error", columnDefinition = "TEXT")
     private String lastError;
@@ -68,94 +77,113 @@ public class InboxEvent {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected InboxEvent() {
+    protected RelayMessage() {
     }
 
-    private InboxEvent(
+    private RelayMessage(
             UUID eventId,
             String source,
+            String destination,
             String aggregateType,
             UUID aggregateId,
             String eventType,
-            String payload
+            String payload,
+            Instant availableAt
     ) {
         if (eventId == null) {
             throw new IllegalArgumentException(
-                    "Inbox event id must not be null"
+                    "Relay event id must not be null"
             );
         }
 
         if (source == null || source.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox event source must not be blank"
+                    "Relay message source must not be blank"
+            );
+        }
+
+        if (destination == null || destination.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Relay message destination must not be blank"
             );
         }
 
         if (aggregateType == null || aggregateType.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox aggregate type must not be blank"
+                    "Relay aggregate type must not be blank"
             );
         }
 
         if (aggregateId == null) {
             throw new IllegalArgumentException(
-                    "Inbox aggregate id must not be null"
+                    "Relay aggregate id must not be null"
             );
         }
 
         if (eventType == null || eventType.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox event type must not be blank"
+                    "Relay event type must not be blank"
             );
         }
 
         if (payload == null || payload.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox payload must not be blank"
+                    "Relay payload must not be blank"
+            );
+        }
+
+        if (availableAt == null) {
+            throw new IllegalArgumentException(
+                    "Relay available time must not be null"
             );
         }
 
         this.eventId = eventId;
         this.source = source.trim();
+        this.destination = destination.trim();
         this.aggregateType = aggregateType.trim();
         this.aggregateId = aggregateId;
         this.eventType = eventType.trim();
         this.payload = payload;
-        this.status = InboxEventStatus.PENDING;
+        this.status = RelayMessageStatus.PENDING;
         this.attemptCount = 0;
-        this.availableAt = Instant.now();
+        this.availableAt = availableAt;
     }
 
-    public static InboxEvent pending(
+    public static RelayMessage pending(
             UUID eventId,
             String source,
+            String destination,
             String aggregateType,
             UUID aggregateId,
             String eventType,
-            String payload
+            String payload,
+            Instant availableAt
     ) {
-        return new InboxEvent(
+        return new RelayMessage(
                 eventId,
                 source,
+                destination,
                 aggregateType,
                 aggregateId,
                 eventType,
-                payload
+                payload,
+                availableAt
         );
     }
 
-    public void markProcessed(Instant processedAt) {
+    public void markDelivered(Instant deliveredAt) {
         requirePendingStatus();
 
-        if (processedAt == null) {
+        if (deliveredAt == null) {
             throw new IllegalArgumentException(
-                    "Processed at must not be null"
+                    "Delivered at must not be null"
             );
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
-        this.status = InboxEventStatus.PROCESSED;
-        this.processedAt = processedAt;
+        this.status = RelayMessageStatus.DELIVERED;
+        this.deliveredAt = deliveredAt;
         this.lastError = null;
     }
 
@@ -168,7 +196,7 @@ public class InboxEvent {
 
         if (error == null || error.isBlank()) {
             throw new IllegalArgumentException(
-                    "Inbox error must not be blank"
+                    "Relay delivery error must not be blank"
             );
         }
 
@@ -188,19 +216,20 @@ public class InboxEvent {
         this.lastError = error.trim();
 
         if (attemptCount >= maxAttempts) {
-            this.status = InboxEventStatus.FAILED;
+            this.status = RelayMessageStatus.FAILED;
         } else {
             this.availableAt = nextAttemptAt;
         }
     }
 
     private void requirePendingStatus() {
-        if (status != InboxEventStatus.PENDING) {
+        if (status != RelayMessageStatus.PENDING) {
             throw new IllegalStateException(
-                    "Only pending inbox events can be processed"
+                    "Only pending relay messages can be delivered"
             );
         }
     }
+
 
     public UUID getEventId() {
         return eventId;
@@ -208,6 +237,10 @@ public class InboxEvent {
 
     public String getSource() {
         return source;
+    }
+
+    public String getDestination() {
+        return destination;
     }
 
     public String getAggregateType() {
@@ -226,7 +259,7 @@ public class InboxEvent {
         return payload;
     }
 
-    public InboxEventStatus getStatus() {
+    public RelayMessageStatus getStatus() {
         return status;
     }
 
@@ -238,8 +271,8 @@ public class InboxEvent {
         return availableAt;
     }
 
-    public Instant getProcessedAt() {
-        return processedAt;
+    public Instant getDeliveredAt() {
+        return deliveredAt;
     }
 
     public String getLastError() {

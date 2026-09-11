@@ -12,11 +12,11 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mars-payment-node</artifactId>
+    <artifactId>interplanetary-relay</artifactId>
     <packaging>jar</packaging>
 
-    <name>Mars Payment Node</name>
-    <description>Local payment processing node for Martian colonies</description>
+    <name>Interplanetary Relay</name>
+    <description>Reliable store-and-forward messaging between planetary services</description>
 
     <dependencies>
         <dependency>

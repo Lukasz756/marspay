@@ -1,0 +1,22 @@
+spring:
+  config:
+    import: "optional:file:./.env[.properties]"
+
+  datasource:
+    url: "jdbc:postgresql://localhost:${MARSPAY_RELAY_DB_PORT}/${MARSPAY_RELAY_DB_NAME}"
+    username: "${MARSPAY_RELAY_DB_USERNAME}"
+    password: "${MARSPAY_RELAY_DB_PASSWORD}"
+
+server:
+  port: "${MARSPAY_RELAY_HTTP_PORT}"
+
+marspay:
+  relay:
+    delivery-delay: "${MARSPAY_RELAY_DELIVERY_DELAY}"
+
+    destinations:
+      - name: MARS_PAYMENT_NODE
+        url: "http://localhost:${MARSPAY_MARS_HTTP_PORT}/internal/relay/events"
+
+      - name: EARTH_PAYMENT_SERVICE
+        url: "http://localhost:${MARSPAY_EARTH_HTTP_PORT}/internal/relay/events"

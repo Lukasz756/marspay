@@ -1,0 +1,101 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-inbox-event
+      author: lukasz756
+      changes:
+        - createTable:
+            tableName: inbox_event
+            columns:
+              - column:
+                  name: event_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_inbox_event
+
+              - column:
+                  name: source
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: aggregate_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: aggregate_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: event_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: payload
+                  type: TEXT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: attempt_count
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: available_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: processed_at
+                  type: TIMESTAMP WITH TIME ZONE
+
+              - column:
+                  name: last_error
+                  type: TEXT
+
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: received_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP WITH TIME ZONE
+                  constraints:
+                    nullable: false
+
+        - sql:
+            sql: >
+              ALTER TABLE inbox_event
+              ADD CONSTRAINT ck_inbox_event_status
+              CHECK (status IN ('PENDING', 'PROCESSED', 'FAILED'))
+
+        - sql:
+            sql: >
+              ALTER TABLE inbox_event
+              ADD CONSTRAINT ck_inbox_event_attempt_count
+              CHECK (attempt_count >= 0)

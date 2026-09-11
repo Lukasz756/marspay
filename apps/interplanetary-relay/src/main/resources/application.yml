@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: interplanetary-relay
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+server:
+  port: 8081

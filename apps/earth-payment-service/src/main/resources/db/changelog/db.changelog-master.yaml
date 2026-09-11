@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - include:
+      file: changes/001-create-inbox-event.yaml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/002-create-outbox-event.yaml
+      relativeToChangelogFile: true
