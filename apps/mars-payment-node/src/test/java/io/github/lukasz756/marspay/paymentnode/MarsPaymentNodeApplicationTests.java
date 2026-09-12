@@ -1,5 +1,12 @@
 package io.github.lukasz756.marspay.paymentnode;
 
+import io.github.lukasz756.marspay.paymentnode.account.AccountHolder;
+import io.github.lukasz756.marspay.paymentnode.account.AccountHolderType;
+import io.github.lukasz756.marspay.paymentnode.account.AccountService;
+import io.github.lukasz756.marspay.paymentnode.account.BalanceAccount;
+import io.github.lukasz756.marspay.paymentnode.payment.Payment;
+import io.github.lukasz756.marspay.paymentnode.payment.PaymentService;
+import io.github.lukasz756.marspay.paymentnode.payment.PaymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +30,12 @@ class MarsPaymentNodeApplicationTests {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private AccountService accountService;
+
+    @Autowired
+    private PaymentService paymentService;
+
     @Test
     void contextLoads() {
     }
@@ -33,4 +46,5 @@ class MarsPaymentNodeApplicationTests {
 
         assertThat(result).isOne();
     }
+
 }

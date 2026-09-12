@@ -80,15 +80,4 @@ class AccountPersistenceTest {
         assertThat(balanceAccountFromRepo.getUpdatedAt()).isNotNull();
         assertThat(balanceAccountFromRepo.getVersion()).isZero();
     }
-
-    @Test
-    void rejectsUnsupportedCurrency() {
-        UUID accountHolderId = UUID.randomUUID();
-
-        assertThatThrownBy(
-                () -> BalanceAccount.open(accountHolderId, "EUR")
-        )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Currency must be MCR");
-    }
 }

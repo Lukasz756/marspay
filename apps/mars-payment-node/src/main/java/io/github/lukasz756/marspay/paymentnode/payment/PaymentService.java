@@ -328,7 +328,15 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
+        BalanceAccount targetAccount = balanceAccountRepository
+                .findById(payment.getTargetBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getTargetBalanceAccountId()
+                ));
+
         payment.requestRefund();
+
+        targetAccount.reserve(payment.getAmountMinor());
 
         recordOperation(
                 payment,
@@ -361,7 +369,7 @@ public class PaymentService {
                 ));
 
         payment.confirmRefund();
-        targetAccount.debit(payment.getAmountMinor());
+        targetAccount.captureReserved(payment.getAmountMinor());
         sourceAccount.credit(payment.getAmountMinor());
 
         recordOperation(
@@ -375,7 +383,7 @@ public class PaymentService {
                 payment.getCurrency(),
                 payment.getReference(),
                 targetAccount.getId(),
-                LedgerBalanceBucket.AVAILABLE,
+                LedgerBalanceBucket.RESERVED,
                 sourceAccount.getId(),
                 LedgerBalanceBucket.AVAILABLE,
                 payment.getAmountMinor()
@@ -389,7 +397,14 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
+        BalanceAccount targetAccount = balanceAccountRepository
+                .findById(payment.getTargetBalanceAccountId())
+                .orElseThrow(() -> new BalanceAccountNotFoundException(
+                        payment.getTargetBalanceAccountId()
+                ));
+
         payment.failRefund();
+        targetAccount.releaseReserved(payment.getAmountMinor());
 
         recordOperation(
                 payment,
