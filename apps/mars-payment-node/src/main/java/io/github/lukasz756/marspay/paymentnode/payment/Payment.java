@@ -54,17 +54,10 @@ public class Payment {
     protected Payment() {
     }
 
-    private Payment(
-            UUID sourceBalanceAccountId,
-            UUID targetBalanceAccountId,
-            long amountMinor,
-            String currency,
-            String reference
-    ) {
+    private Payment(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor, String currency,
+                    String reference) {
         if (sourceBalanceAccountId == null || targetBalanceAccountId == null) {
-            throw new IllegalArgumentException(
-                    "Source and target balance account ids must not be null"
-            );
+            throw new IllegalArgumentException("Source and target balance account ids must not be null");
         }
 
         if (sourceBalanceAccountId.equals(targetBalanceAccountId)) {
@@ -72,37 +65,28 @@ public class Payment {
         }
 
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Payment amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Payment amount must be greater than 0");
         }
 
         if (currency == null || currency.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Currency must not be blank"
-            );
+            throw new IllegalArgumentException("Currency must not be blank");
         }
 
-        String normalizedCurrency = currency.trim().toUpperCase(Locale.ROOT);
+        String normalizedCurrency = currency.trim()
+                .toUpperCase(Locale.ROOT);
 
         if (!normalizedCurrency.matches("[A-Z]{3}")) {
-            throw new IllegalArgumentException(
-                    "Currency must contain exactly three letters"
-            );
+            throw new IllegalArgumentException("Currency must contain exactly three letters");
         }
 
         if (reference == null || reference.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Payment reference must not be blank"
-            );
+            throw new IllegalArgumentException("Payment reference must not be blank");
         }
 
         String normalizedReference = reference.trim();
 
         if (normalizedReference.length() > 100) {
-            throw new IllegalArgumentException(
-                    "Payment reference must be at most 100 characters"
-            );
+            throw new IllegalArgumentException("Payment reference must be at most 100 characters");
         }
 
         this.sourceBalanceAccountId = sourceBalanceAccountId;
@@ -113,23 +97,14 @@ public class Payment {
         this.status = PaymentStatus.CREATED;
     }
 
-    public static Payment create(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor, String currency, String reference) {
-        return new Payment(
-                sourceBalanceAccountId,
-                targetBalanceAccountId,
-                amountMinor,
-                currency,
-                reference
-        );
+    public static Payment create(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor,
+                                 String currency, String reference) {
+        return new Payment(sourceBalanceAccountId, targetBalanceAccountId, amountMinor, currency, reference);
     }
 
     public void requestCapture() {
         if (status != PaymentStatus.AUTHORIZED) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.AUTHORIZED
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZED);
         }
 
         status = PaymentStatus.CAPTURE_PENDING;
@@ -137,11 +112,7 @@ public class Payment {
 
     public void confirmCapture() {
         if (status != PaymentStatus.CAPTURE_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CAPTURE_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURE_PENDING);
         }
 
         status = PaymentStatus.CAPTURED;
@@ -149,11 +120,7 @@ public class Payment {
 
     public void failCapture() {
         if (status != PaymentStatus.CAPTURE_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CAPTURE_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURE_PENDING);
         }
 
         status = PaymentStatus.AUTHORIZED;
@@ -161,11 +128,7 @@ public class Payment {
 
     public void requestCancel() {
         if (status != PaymentStatus.AUTHORIZED) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.AUTHORIZED
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZED);
         }
 
         status = PaymentStatus.CANCEL_PENDING;
@@ -173,11 +136,7 @@ public class Payment {
 
     public void confirmCancel() {
         if (status != PaymentStatus.CANCEL_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CANCEL_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CANCEL_PENDING);
         }
 
         status = PaymentStatus.CANCELLED;
@@ -185,11 +144,7 @@ public class Payment {
 
     public void failCancel() {
         if (status != PaymentStatus.CANCEL_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CANCEL_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CANCEL_PENDING);
         }
 
         status = PaymentStatus.AUTHORIZED;
@@ -197,11 +152,7 @@ public class Payment {
 
     public void requestRefund() {
         if (status != PaymentStatus.CAPTURED) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CAPTURED
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURED);
         }
 
         status = PaymentStatus.REFUND_PENDING;
@@ -209,11 +160,7 @@ public class Payment {
 
     public void confirmRefund() {
         if (status != PaymentStatus.REFUND_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.REFUND_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.REFUND_PENDING);
         }
 
         status = PaymentStatus.REFUNDED;
@@ -221,11 +168,7 @@ public class Payment {
 
     public void failRefund() {
         if (status != PaymentStatus.REFUND_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.REFUND_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.REFUND_PENDING);
         }
 
         status = PaymentStatus.CAPTURED;
@@ -233,11 +176,7 @@ public class Payment {
 
     public void requestAuthorization() {
         if (status != PaymentStatus.CREATED) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.CREATED
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.CREATED);
         }
 
         status = PaymentStatus.AUTHORIZATION_PENDING;
@@ -245,11 +184,7 @@ public class Payment {
 
     public void confirmAuthorization() {
         if (status != PaymentStatus.AUTHORIZATION_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.AUTHORIZATION_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZATION_PENDING);
         }
 
         status = PaymentStatus.AUTHORIZED;
@@ -257,11 +192,7 @@ public class Payment {
 
     public void declineAuthorization() {
         if (status != PaymentStatus.AUTHORIZATION_PENDING) {
-            throw new PaymentInvalidStatusException(
-                    id,
-                    status,
-                    PaymentStatus.AUTHORIZATION_PENDING
-            );
+            throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZATION_PENDING);
         }
 
         status = PaymentStatus.DECLINED;

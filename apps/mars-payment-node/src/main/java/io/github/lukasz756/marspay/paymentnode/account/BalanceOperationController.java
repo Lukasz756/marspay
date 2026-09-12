@@ -19,14 +19,9 @@ public class BalanceOperationController {
     }
 
     @GetMapping("/{operationId}")
-    public ResponseEntity<BalanceOperationResponse> getBalanceOperation(
-            @PathVariable UUID operationId
-    ) {
-        BalanceOperation operation =
-                accountService.getBalanceOperation(operationId);
+    public ResponseEntity<BalanceOperationResponse> getBalanceOperation(@PathVariable UUID operationId) {
+        BalanceOperation operation = accountService.getBalanceOperation(operationId);
 
-        return ResponseEntity.ok(
-                BalanceOperationResponse.from(operation)
-        );
+        return ResponseEntity.ok(BalanceOperationResponse.from(operation));
     }
 }

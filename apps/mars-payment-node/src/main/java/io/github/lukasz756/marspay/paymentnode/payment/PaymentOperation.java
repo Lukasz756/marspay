@@ -38,27 +38,17 @@ public class PaymentOperation {
     protected PaymentOperation() {
     }
 
-    private PaymentOperation(
-            UUID paymentId,
-            PaymentOperationType type,
-            long amountMinor
-    ) {
+    private PaymentOperation(UUID paymentId, PaymentOperationType type, long amountMinor) {
         if (paymentId == null) {
-            throw new IllegalArgumentException(
-                    "Payment id must not be null"
-            );
+            throw new IllegalArgumentException("Payment id must not be null");
         }
 
         if (type == null) {
-            throw new IllegalArgumentException(
-                    "Payment operation type must not be null"
-            );
+            throw new IllegalArgumentException("Payment operation type must not be null");
         }
 
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Payment operation amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Payment operation amount must be greater than 0");
         }
 
         this.paymentId = paymentId;
@@ -66,11 +56,7 @@ public class PaymentOperation {
         this.amountMinor = amountMinor;
     }
 
-    public static PaymentOperation record(
-            UUID paymentId,
-            PaymentOperationType type,
-            long amountMinor
-    ) {
+    public static PaymentOperation record(UUID paymentId, PaymentOperationType type, long amountMinor) {
         return new PaymentOperation(paymentId, type, amountMinor);
     }
 

@@ -12,24 +12,18 @@ public final class RequestHasher {
 
     public static String sha256(String canonicalRequest) {
         if (canonicalRequest == null) {
-            throw new IllegalArgumentException(
-                    "Canonical request must not be null"
-            );
+            throw new IllegalArgumentException("Canonical request must not be null");
         }
 
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            byte[] hash = digest.digest(
-                    canonicalRequest.getBytes(StandardCharsets.UTF_8)
-            );
+            byte[] hash = digest.digest(canonicalRequest.getBytes(StandardCharsets.UTF_8));
 
-            return HexFormat.of().formatHex(hash);
+            return HexFormat.of()
+                    .formatHex(hash);
         } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(
-                    "SHA-256 algorithm is not available",
-                    exception
-            );
+            throw new IllegalStateException("SHA-256 algorithm is not available", exception);
         }
     }
 }

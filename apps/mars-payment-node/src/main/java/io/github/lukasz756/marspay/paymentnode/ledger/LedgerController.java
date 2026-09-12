@@ -17,22 +17,15 @@ public class LedgerController {
     private final LedgerService ledgerService;
     private final PaymentService paymentService;
 
-    public LedgerController(
-            LedgerService ledgerService,
-            PaymentService paymentService
-    ) {
+    public LedgerController(LedgerService ledgerService, PaymentService paymentService) {
         this.ledgerService = ledgerService;
         this.paymentService = paymentService;
     }
 
     @GetMapping("/{paymentId}/ledger")
-    public ResponseEntity<List<LedgerTransactionResponse>> getPaymentLedger(
-            @PathVariable UUID paymentId
-    ) {
+    public ResponseEntity<List<LedgerTransactionResponse>> getPaymentLedger(@PathVariable UUID paymentId) {
         paymentService.getPayment(paymentId);
 
-        return ResponseEntity.ok(
-                ledgerService.getPaymentLedger(paymentId)
-        );
+        return ResponseEntity.ok(ledgerService.getPaymentLedger(paymentId));
     }
 }

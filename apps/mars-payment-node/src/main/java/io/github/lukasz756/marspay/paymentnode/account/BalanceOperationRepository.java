@@ -6,11 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface BalanceOperationRepository extends JpaRepository<BalanceOperation, UUID> {
-    boolean existsByBalanceAccountIdAndReference(
-            UUID balanceAccountId,
-            String reference
-    );
-    List<BalanceOperation> findAllByBalanceAccountIdOrderByCreatedAtDesc(
-            UUID balanceAccountId
-    );
+    boolean existsByBalanceAccountIdAndReference(UUID balanceAccountId, String reference);
+
+    List<BalanceOperation> findAllByBalanceAccountIdOrderByCreatedAtDesc(UUID balanceAccountId);
 }

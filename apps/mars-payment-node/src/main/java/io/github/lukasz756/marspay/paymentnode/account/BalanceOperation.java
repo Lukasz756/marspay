@@ -45,15 +45,8 @@ public class BalanceOperation {
 
     }
 
-    private BalanceOperation(
-            UUID balanceAccountId,
-            BalanceOperationType type,
-            long amountMinor,
-            String reference,
-            long availableBalanceAfterMinor,
-            long reservedBalanceAfterMinor,
-            UUID transferId
-    ) {
+    private BalanceOperation(UUID balanceAccountId, BalanceOperationType type, long amountMinor, String reference,
+                             long availableBalanceAfterMinor, long reservedBalanceAfterMinor, UUID transferId) {
         if (balanceAccountId == null) {
             throw new IllegalArgumentException("Balance account id must not be null");
         }
@@ -63,29 +56,21 @@ public class BalanceOperation {
         }
 
         if (reference == null || reference.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Reference must not be blank"
-            );
+            throw new IllegalArgumentException("Reference must not be blank");
         }
 
         String normalizedReference = reference.trim();
 
         if (normalizedReference.length() > 100) {
-            throw new IllegalArgumentException(
-                    "Reference must be at most 100 characters"
-            );
+            throw new IllegalArgumentException("Reference must be at most 100 characters");
         }
 
         if (availableBalanceAfterMinor < 0) {
-            throw new IllegalArgumentException(
-                    "Available balance after operation must not be negative"
-            );
+            throw new IllegalArgumentException("Available balance after operation must not be negative");
         }
 
         if (reservedBalanceAfterMinor < 0) {
-            throw new IllegalArgumentException(
-                    "Reserved balance after operation must not be negative"
-            );
+            throw new IllegalArgumentException("Reserved balance after operation must not be negative");
         }
 
         this.balanceAccountId = balanceAccountId;
@@ -94,70 +79,32 @@ public class BalanceOperation {
         this.availableBalanceAfterMinor = availableBalanceAfterMinor;
         this.reservedBalanceAfterMinor = reservedBalanceAfterMinor;
         this.transferId = transferId;
-        this.type = Objects.requireNonNull(
-                type,
-                "Balance operation type must not be null");
+        this.type = Objects.requireNonNull(type, "Balance operation type must not be null");
 
     }
 
-    public static BalanceOperation credit(
-            UUID balanceAccountId,
-            long amountMinor,
-            String reference,
-            long availableBalanceAfterMinor,
-            long reservedBalanceAfterMinor
-    ) {
-        return new BalanceOperation(
-                balanceAccountId,
-                BalanceOperationType.CREDIT,
-                amountMinor,
-                reference,
-                availableBalanceAfterMinor,
-                reservedBalanceAfterMinor,
-                null
-        );
+    public static BalanceOperation credit(UUID balanceAccountId, long amountMinor, String reference,
+                                          long availableBalanceAfterMinor, long reservedBalanceAfterMinor) {
+        return new BalanceOperation(balanceAccountId, BalanceOperationType.CREDIT, amountMinor, reference,
+                                    availableBalanceAfterMinor, reservedBalanceAfterMinor, null);
     }
 
-    public static BalanceOperation transferCredit(
-            UUID transferId,
-            UUID balanceAccountId,
-            long amountMinor,
-            String reference,
-            long availableBalanceAfterMinor,
-            long reservedBalanceAfterMinor
-    ) {
+    public static BalanceOperation transferCredit(UUID transferId, UUID balanceAccountId, long amountMinor,
+                                                  String reference, long availableBalanceAfterMinor,
+                                                  long reservedBalanceAfterMinor) {
         Objects.requireNonNull(transferId, "Transfer id must not be null");
 
-        return new BalanceOperation(
-                balanceAccountId,
-                BalanceOperationType.CREDIT,
-                amountMinor,
-                reference,
-                availableBalanceAfterMinor,
-                reservedBalanceAfterMinor,
-                transferId
-        );
+        return new BalanceOperation(balanceAccountId, BalanceOperationType.CREDIT, amountMinor, reference,
+                                    availableBalanceAfterMinor, reservedBalanceAfterMinor, transferId);
     }
 
-    public static BalanceOperation transferDebit(
-            UUID transferId,
-            UUID balanceAccountId,
-            long amountMinor,
-            String reference,
-            long availableBalanceAfterMinor,
-            long reservedBalanceAfterMinor
-    ) {
+    public static BalanceOperation transferDebit(UUID transferId, UUID balanceAccountId, long amountMinor,
+                                                 String reference, long availableBalanceAfterMinor,
+                                                 long reservedBalanceAfterMinor) {
         Objects.requireNonNull(transferId, "Transfer id must not be null");
 
-        return new BalanceOperation(
-                balanceAccountId,
-                BalanceOperationType.DEBIT,
-                amountMinor,
-                reference,
-                availableBalanceAfterMinor,
-                reservedBalanceAfterMinor,
-                transferId
-        );
+        return new BalanceOperation(balanceAccountId, BalanceOperationType.DEBIT, amountMinor, reference,
+                                    availableBalanceAfterMinor, reservedBalanceAfterMinor, transferId);
     }
 
     public UUID getId() {

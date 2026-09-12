@@ -7,12 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-interface OutboxEventRepository
-        extends JpaRepository<OutboxEvent, UUID> {
+interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> {
 
-    List<OutboxEvent>
-    findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscCreatedAtAsc(
-            OutboxEventStatus status,
-            Instant availableAt
-    );
+    List<OutboxEvent> findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscCreatedAtAsc(OutboxEventStatus status, Instant availableAt);
 }

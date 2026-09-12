@@ -11,13 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class IdempotencyExceptionHandler {
 
     @ExceptionHandler(IdempotencyKeyConflictException.class)
-    ProblemDetail handleKeyConflict(
-            IdempotencyKeyConflictException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handleKeyConflict(IdempotencyKeyConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Idempotency key conflict");
 
@@ -25,13 +20,8 @@ public class IdempotencyExceptionHandler {
     }
 
     @ExceptionHandler(IdempotencyRequestInProgressException.class)
-    ProblemDetail handleRequestInProgress(
-            IdempotencyRequestInProgressException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handleRequestInProgress(IdempotencyRequestInProgressException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Idempotent request in progress");
 

@@ -6,12 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-interface RelayMessageRepository
-        extends JpaRepository<RelayMessage, UUID> {
+interface RelayMessageRepository extends JpaRepository<RelayMessage, UUID> {
 
-    List<RelayMessage>
-    findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscReceivedAtAsc(
-            RelayMessageStatus status,
-            Instant availableAt
-    );
+    List<RelayMessage> findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscReceivedAtAsc(RelayMessageStatus status, Instant availableAt);
 }

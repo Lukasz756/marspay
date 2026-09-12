@@ -38,154 +38,72 @@ class PaymentLifecycleIT extends AbstractPaymentIT {
     private LedgerService ledgerService;
 
     @Test
-    void authorizesAndCapturesPaymentThroughHttpAndInbox()
-            throws Exception {
+    void authorizesAndCapturesPaymentThroughHttpAndInbox() throws Exception {
 
         PaymentFixture fixture = createPaymentFixture();
 
-        UUID sourceAccountId =
-                fixture.sourceAccount().getId();
+        UUID sourceAccountId = fixture.sourceAccount()
+                .getId();
 
-        UUID targetAccountId =
-                fixture.targetAccount().getId();
+        UUID targetAccountId = fixture.targetAccount()
+                .getId();
 
-        accountService.creditBalanceAccount(
-                sourceAccountId,
-                1_000,
-                "lifecycle-funding-" + UUID.randomUUID()
-        );
+        accountService.creditBalanceAccount(sourceAccountId, 1_000, "lifecycle-funding-" + UUID.randomUUID());
 
-        Payment payment = paymentService.createPayment(
-                sourceAccountId,
-                targetAccountId,
-                300,
-                "lifecycle-" + UUID.randomUUID()
-        );
+        Payment payment = paymentService.createPayment(sourceAccountId, targetAccountId, 300,
+                                                       "lifecycle-" + UUID.randomUUID());
 
-        mockMvc.perform(
-                        post(
-                                "/api/payments/{paymentId}/authorize",
-                                payment.getId()
-                        )
-                )
+        mockMvc.perform(post("/api/payments/{paymentId}/authorize", payment.getId()))
                 .andExpect(status().isAccepted())
-                .andExpect(
-                        jsonPath("$.id")
-                                .value(payment.getId().toString())
-                )
-                .andExpect(
-                        jsonPath("$.status")
-                                .value("AUTHORIZATION_PENDING")
-                );
+                .andExpect(jsonPath("$.id").value(payment.getId()
+                                                          .toString()))
+                .andExpect(jsonPath("$.status").value("AUTHORIZATION_PENDING"));
 
-        BalanceAccount sourceAfterAuthorizationRequest =
-                accountService.getBalanceAccount(sourceAccountId);
+        BalanceAccount sourceAfterAuthorizationRequest = accountService.getBalanceAccount(sourceAccountId);
 
-        assertThat(
-                sourceAfterAuthorizationRequest
-                        .getAvailableBalanceMinor()
-        ).isEqualTo(700);
+        assertThat(sourceAfterAuthorizationRequest.getAvailableBalanceMinor()).isEqualTo(700);
 
-        assertThat(
-                sourceAfterAuthorizationRequest
-                        .getReservedBalanceMinor()
-        ).isEqualTo(300);
+        assertThat(sourceAfterAuthorizationRequest.getReservedBalanceMinor()).isEqualTo(300);
 
-        receiveAndProcessPaymentResult(
-                payment.getId(),
-                "PAYMENT_AUTHORIZED",
-                "AUTHORIZED"
-        );
+        receiveAndProcessPaymentResult(payment.getId(), "PAYMENT_AUTHORIZED", "AUTHORIZED");
 
-        mockMvc.perform(
-                        get(
-                                "/api/payments/{paymentId}",
-                                payment.getId()
-                        )
-                )
+        mockMvc.perform(get("/api/payments/{paymentId}", payment.getId()))
                 .andExpect(status().isOk())
-                .andExpect(
-                        jsonPath("$.status").value("AUTHORIZED")
-                );
+                .andExpect(jsonPath("$.status").value("AUTHORIZED"));
 
-        mockMvc.perform(
-                        post(
-                                "/api/payments/{paymentId}/capture",
-                                payment.getId()
-                        )
-                )
+        mockMvc.perform(post("/api/payments/{paymentId}/capture", payment.getId()))
                 .andExpect(status().isAccepted())
-                .andExpect(
-                        jsonPath("$.status")
-                                .value("CAPTURE_PENDING")
-                );
+                .andExpect(jsonPath("$.status").value("CAPTURE_PENDING"));
 
-        receiveAndProcessPaymentResult(
-                payment.getId(),
-                "PAYMENT_CAPTURED",
-                "CAPTURED"
-        );
+        receiveAndProcessPaymentResult(payment.getId(), "PAYMENT_CAPTURED", "CAPTURED");
 
-        mockMvc.perform(
-                        get(
-                                "/api/payments/{paymentId}",
-                                payment.getId()
-                        )
-                )
+        mockMvc.perform(get("/api/payments/{paymentId}", payment.getId()))
                 .andExpect(status().isOk())
-                .andExpect(
-                        jsonPath("$.status").value("CAPTURED")
-                )
-                .andExpect(
-                        jsonPath("$.amountMinor").value(300)
-                );
+                .andExpect(jsonPath("$.status").value("CAPTURED"))
+                .andExpect(jsonPath("$.amountMinor").value(300));
 
-        BalanceAccount sourceAfterCapture =
-                accountService.getBalanceAccount(sourceAccountId);
+        BalanceAccount sourceAfterCapture = accountService.getBalanceAccount(sourceAccountId);
 
-        BalanceAccount targetAfterCapture =
-                accountService.getBalanceAccount(targetAccountId);
+        BalanceAccount targetAfterCapture = accountService.getBalanceAccount(targetAccountId);
 
-        assertThat(
-                sourceAfterCapture.getAvailableBalanceMinor()
-        ).isEqualTo(700);
+        assertThat(sourceAfterCapture.getAvailableBalanceMinor()).isEqualTo(700);
 
-        assertThat(
-                sourceAfterCapture.getReservedBalanceMinor()
-        ).isZero();
+        assertThat(sourceAfterCapture.getReservedBalanceMinor()).isZero();
 
-        assertThat(
-                targetAfterCapture.getAvailableBalanceMinor()
-        ).isEqualTo(300);
+        assertThat(targetAfterCapture.getAvailableBalanceMinor()).isEqualTo(300);
 
-        assertThat(
-                targetAfterCapture.getReservedBalanceMinor()
-        ).isZero();
+        assertThat(targetAfterCapture.getReservedBalanceMinor()).isZero();
 
-        assertThat(
-                paymentOperationRepository
-                        .findAllByPaymentIdOrderByCreatedAtAsc(
-                                payment.getId()
-                        )
-        )
-                .extracting(PaymentOperation::getType)
-                .containsExactly(
-                        PaymentOperationType.CREATE,
-                        PaymentOperationType.AUTHORIZATION_REQUESTED,
-                        PaymentOperationType.AUTHORIZATION_CONFIRMED,
-                        PaymentOperationType.CAPTURE_REQUESTED,
-                        PaymentOperationType.CAPTURE_CONFIRMED
-                );
+        assertThat(paymentOperationRepository.findAllByPaymentIdOrderByCreatedAtAsc(payment.getId())).extracting(
+                        PaymentOperation::getType)
+                .containsExactly(PaymentOperationType.CREATE, PaymentOperationType.AUTHORIZATION_REQUESTED,
+                                 PaymentOperationType.AUTHORIZATION_CONFIRMED, PaymentOperationType.CAPTURE_REQUESTED
+                        , PaymentOperationType.CAPTURE_CONFIRMED);
 
-        List<LedgerTransactionResponse> ledger =
-                ledgerService.getPaymentLedger(payment.getId());
+        List<LedgerTransactionResponse> ledger = ledgerService.getPaymentLedger(payment.getId());
 
-        assertThat(ledger)
-                .extracting(LedgerTransactionResponse::type)
-                .containsExactly(
-                        LedgerTransactionType.PAYMENT_AUTHORIZE,
-                        LedgerTransactionType.PAYMENT_CAPTURE
-                );
+        assertThat(ledger).extracting(LedgerTransactionResponse::type)
+                .containsExactly(LedgerTransactionType.PAYMENT_AUTHORIZE, LedgerTransactionType.PAYMENT_CAPTURE);
 
         assertThat(ledger).allSatisfy(transaction -> {
             assertThat(transaction.entries()).hasSize(2);
@@ -199,54 +117,22 @@ class PaymentLifecycleIT extends AbstractPaymentIT {
         });
     }
 
-    private void receiveAndProcessPaymentResult(
-            UUID paymentId,
-            String eventType,
-            String paymentStatus
-    ) throws Exception {
+    private void receiveAndProcessPaymentResult(UUID paymentId, String eventType, String paymentStatus) throws Exception {
 
         UUID eventId = UUID.randomUUID();
         Instant occurredAt = Instant.now();
 
-        PaymentResultPayload payload =
-                new PaymentResultPayload(
-                        1,
-                        paymentId,
-                        paymentStatus,
-                        null,
-                        occurredAt
-                );
+        PaymentResultPayload payload = new PaymentResultPayload(1, paymentId, paymentStatus, null, occurredAt);
 
-        IncomingEventRequest request =
-                new IncomingEventRequest(
-                        eventId,
-                        "EARTH_PAYMENT_SERVICE",
-                        "PAYMENT",
-                        paymentId,
-                        eventType,
-                        objectMapper.valueToTree(payload)
-                );
+        IncomingEventRequest request = new IncomingEventRequest(eventId, "EARTH_PAYMENT_SERVICE", "PAYMENT",
+                                                                paymentId, eventType,
+                                                                objectMapper.valueToTree(payload));
 
-        mockMvc.perform(
-                        post("/internal/relay/events")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(
-                                        objectMapper.writeValueAsBytes(
-                                                request
-                                        )
-                                )
-                )
+        mockMvc.perform(post("/internal/relay/events").contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isAccepted())
-                .andExpect(
-                        header().string(
-                                "Inbox-Duplicate",
-                                "false"
-                        )
-                );
+                .andExpect(header().string("Inbox-Duplicate", "false"));
 
-        inboxService.processEvent(
-                eventId,
-                Instant.now()
-        );
+        inboxService.processEvent(eventId, Instant.now());
     }
 }

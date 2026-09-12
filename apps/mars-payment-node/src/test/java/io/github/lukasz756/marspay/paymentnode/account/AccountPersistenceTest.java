@@ -19,9 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @DataJpaTest
 @Testcontainers
-@AutoConfigureTestDatabase(
-        replace = AutoConfigureTestDatabase.Replace.NONE
-)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ImportAutoConfiguration(LiquibaseAutoConfiguration.class)
 class AccountPersistenceTest {
 
@@ -38,8 +36,7 @@ class AccountPersistenceTest {
 
     @Container
     @ServiceConnection
-    private static final PostgreSQLContainer POSTGRESQL =
-            new PostgreSQLContainer("postgres:17-alpine");
+    private static final PostgreSQLContainer POSTGRESQL = new PostgreSQLContainer("postgres:17-alpine");
 
     @Test
     void savesAndLoadsAccountHolder() {
@@ -47,7 +44,8 @@ class AccountPersistenceTest {
         accountHolderRepository.saveAndFlush(accountHolder);
         UUID accountHolderId = accountHolder.getId();
         entityManager.clear();
-        AccountHolder accHolderFromRepo = accountHolderRepository.findById(accountHolderId).orElseThrow();
+        AccountHolder accHolderFromRepo = accountHolderRepository.findById(accountHolderId)
+                .orElseThrow();
 
         assertThat(accountHolderId).isNotNull();
         assertThat(accHolderFromRepo.getId()).isEqualTo(accountHolderId);
@@ -62,12 +60,14 @@ class AccountPersistenceTest {
     void savesAndLoadsBalanceAccount() {
         AccountHolder accountHolder = AccountHolder.create(HOLDER_001, AccountHolderType.PERSON);
         accountHolderRepository.saveAndFlush(accountHolder);
-        AccountHolder accHolderFromRepo = accountHolderRepository.findById(accountHolder.getId()).orElseThrow();
+        AccountHolder accHolderFromRepo = accountHolderRepository.findById(accountHolder.getId())
+                .orElseThrow();
         BalanceAccount balanceAccount = BalanceAccount.open(accHolderFromRepo.getId(), "MCR");
         balanceAccountRepository.saveAndFlush(balanceAccount);
         entityManager.clear();
         UUID balanceAccountId = balanceAccount.getId();
-        BalanceAccount balanceAccountFromRepo = balanceAccountRepository.findById(balanceAccountId).orElseThrow();
+        BalanceAccount balanceAccountFromRepo = balanceAccountRepository.findById(balanceAccountId)
+                .orElseThrow();
 
         assertThat(balanceAccountFromRepo.getId()).isNotNull();
         assertThat(balanceAccountFromRepo.getId()).isEqualTo(balanceAccountId);

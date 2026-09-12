@@ -1,7 +1,5 @@
 package io.github.lukasz756.marspay.earth.outbox;
 
 public enum OutboxEventStatus {
-    PENDING,
-    PUBLISHED,
-    FAILED
+    PENDING, PUBLISHED, FAILED
 }

@@ -15,17 +15,15 @@ public class AccountService {
     private final BalanceAccountRepository balanceAccountRepository;
     private final BalanceOperationRepository balanceOperationRepository;
 
-    AccountService(AccountHolderRepository accountHolderRepository, BalanceAccountRepository balanceAccountRepository, BalanceOperationRepository balanceOperationRepository) {
+    AccountService(AccountHolderRepository accountHolderRepository, BalanceAccountRepository balanceAccountRepository
+            , BalanceOperationRepository balanceOperationRepository) {
         this.accountHolderRepository = accountHolderRepository;
         this.balanceAccountRepository = balanceAccountRepository;
         this.balanceOperationRepository = balanceOperationRepository;
     }
 
     @Transactional
-    public AccountHolder createAccountHolder(
-            String reference,
-            AccountHolderType type
-    ) {
+    public AccountHolder createAccountHolder(String reference, AccountHolderType type) {
         AccountHolder accountHolder = AccountHolder.create(reference, type);
         if (accountHolderRepository.existsByReference(accountHolder.getReference())) {
             throw new AccountHolderReferenceAlreadyExistsException(accountHolder.getReference());
@@ -46,19 +44,11 @@ public class AccountService {
             throw new AccountHolderNotActiveException(accountHolderId);
         }
 
-        BalanceAccount balanceAccount = BalanceAccount.open(
-                accountHolder.getId(),
-                currency
-        );
+        BalanceAccount balanceAccount = BalanceAccount.open(accountHolder.getId(), currency);
 
-        if (balanceAccountRepository.existsByAccountHolderIdAndCurrency(
-                accountHolder.getId(),
-                balanceAccount.getCurrency()
-        )) {
-            throw new BalanceAccountAlreadyExistsException(
-                    accountHolder.getId(),
-                    balanceAccount.getCurrency()
-            );
+        if (balanceAccountRepository.existsByAccountHolderIdAndCurrency(accountHolder.getId(),
+                                                                        balanceAccount.getCurrency())) {
+            throw new BalanceAccountAlreadyExistsException(accountHolder.getId(), balanceAccount.getCurrency());
         }
 
         return balanceAccountRepository.save(balanceAccount);
@@ -73,38 +63,22 @@ public class AccountService {
     public List<BalanceAccount> getBalanceAccounts(UUID accountHolderId) {
         requireAccountHolder(accountHolderId);
 
-        return balanceAccountRepository
-                .findAllByAccountHolderIdOrderByCurrencyAsc(accountHolderId);
+        return balanceAccountRepository.findAllByAccountHolderIdOrderByCurrencyAsc(accountHolderId);
     }
 
     @Transactional
-    public BalanceOperation creditBalanceAccount(
-            UUID balanceAccountId,
-            long amountMinor,
-            String reference
-    ) {
-        BalanceAccount balanceAccount =
-                requireBalanceAccount(balanceAccountId);
+    public BalanceOperation creditBalanceAccount(UUID balanceAccountId, long amountMinor, String reference) {
+        BalanceAccount balanceAccount = requireBalanceAccount(balanceAccountId);
 
         balanceAccount.credit(amountMinor);
 
-        BalanceOperation operation = BalanceOperation.credit(
-                balanceAccount.getId(),
-                amountMinor,
-                reference,
-                balanceAccount.getAvailableBalanceMinor(),
-                balanceAccount.getReservedBalanceMinor()
-        );
+        BalanceOperation operation = BalanceOperation.credit(balanceAccount.getId(), amountMinor, reference,
+                                                             balanceAccount.getAvailableBalanceMinor(),
+                                                             balanceAccount.getReservedBalanceMinor());
 
-        if (balanceOperationRepository
-                .existsByBalanceAccountIdAndReference(
-                        balanceAccountId,
-                        operation.getReference()
-                )) {
-            throw new BalanceOperationAlreadyExistsException(
-                    balanceAccountId,
-                    operation.getReference()
-            );
+        if (balanceOperationRepository.existsByBalanceAccountIdAndReference(balanceAccountId,
+                                                                            operation.getReference())) {
+            throw new BalanceOperationAlreadyExistsException(balanceAccountId, operation.getReference());
         }
 
         return balanceOperationRepository.save(operation);
@@ -113,34 +87,23 @@ public class AccountService {
     @Transactional(readOnly = true)
     public BalanceOperation getBalanceOperation(UUID operationId) {
         return balanceOperationRepository.findById(operationId)
-                .orElseThrow(
-                        () -> new BalanceOperationNotFoundException(operationId)
-                );
+                .orElseThrow(() -> new BalanceOperationNotFoundException(operationId));
     }
 
     @Transactional(readOnly = true)
-    public List<BalanceOperation> getBalanceOperations(
-            UUID balanceAccountId
-    ) {
+    public List<BalanceOperation> getBalanceOperations(UUID balanceAccountId) {
         requireBalanceAccount(balanceAccountId);
 
-        return balanceOperationRepository
-                .findAllByBalanceAccountIdOrderByCreatedAtDesc(
-                        balanceAccountId
-                );
+        return balanceOperationRepository.findAllByBalanceAccountIdOrderByCreatedAtDesc(balanceAccountId);
     }
 
     private AccountHolder requireAccountHolder(UUID accountHolderId) {
         return accountHolderRepository.findById(accountHolderId)
-                .orElseThrow(
-                        () -> new AccountHolderNotFoundException(accountHolderId)
-                );
+                .orElseThrow(() -> new AccountHolderNotFoundException(accountHolderId));
     }
 
     private BalanceAccount requireBalanceAccount(UUID balanceAccountId) {
         return balanceAccountRepository.findById(balanceAccountId)
-                .orElseThrow(
-                        () -> new BalanceAccountNotFoundException(balanceAccountId)
-                );
+                .orElseThrow(() -> new BalanceAccountNotFoundException(balanceAccountId));
     }
 }

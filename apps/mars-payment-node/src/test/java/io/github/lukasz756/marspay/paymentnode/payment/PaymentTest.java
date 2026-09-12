@@ -41,17 +41,9 @@ class PaymentTest {
 
     @Test
     void rejectsRefundRequestWhenPaymentIsNotCaptured() {
-        Payment createdPayment = Payment.create(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                300,
-                "MCR",
-                "unit-test-payment"
-        );
+        Payment createdPayment = Payment.create(UUID.randomUUID(), UUID.randomUUID(), 300, "MCR", "unit-test-payment");
 
-        assertThatThrownBy(() -> createdPayment.requestRefund()).isInstanceOf(
-                PaymentInvalidStatusException.class
-        );
+        assertThatThrownBy(() -> createdPayment.requestRefund()).isInstanceOf(PaymentInvalidStatusException.class);
 
         assertThat(createdPayment.getStatus()).isEqualTo(PaymentStatus.CREATED);
     }
@@ -60,9 +52,7 @@ class PaymentTest {
     void rejectsRefundConfirmationWhenRefundIsNotPending() {
         Payment capturedPayment = createCapturedPayment();
 
-        assertThatThrownBy(() -> capturedPayment.confirmRefund()).isInstanceOf(
-                PaymentInvalidStatusException.class
-        );
+        assertThatThrownBy(() -> capturedPayment.confirmRefund()).isInstanceOf(PaymentInvalidStatusException.class);
 
         assertThat(capturedPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
     }
@@ -71,12 +61,9 @@ class PaymentTest {
     void rejectsRefundFailureWhenRefundIsNotPending() {
         Payment capturedPayment = createCapturedPayment();
 
-        assertThatThrownBy(() -> capturedPayment.failRefund()).isInstanceOf(
-                PaymentInvalidStatusException.class
-        );
+        assertThatThrownBy(() -> capturedPayment.failRefund()).isInstanceOf(PaymentInvalidStatusException.class);
 
-        assertThat(capturedPayment.getStatus())
-                .isEqualTo(PaymentStatus.CAPTURED);
+        assertThat(capturedPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
     }
 
     @Test
@@ -85,21 +72,13 @@ class PaymentTest {
 
         payment.requestRefund();
 
-        assertThatThrownBy(payment::requestRefund)
-                .isInstanceOf(PaymentInvalidStatusException.class);
+        assertThatThrownBy(payment::requestRefund).isInstanceOf(PaymentInvalidStatusException.class);
 
-        assertThat(payment.getStatus())
-                .isEqualTo(PaymentStatus.REFUND_PENDING);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_PENDING);
     }
 
     private Payment createCapturedPayment() {
-        Payment payment = Payment.create(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                300,
-                "MCR",
-                "unit-test-payment"
-        );
+        Payment payment = Payment.create(UUID.randomUUID(), UUID.randomUUID(), 300, "MCR", "unit-test-payment");
 
         payment.requestAuthorization();
         payment.confirmAuthorization();

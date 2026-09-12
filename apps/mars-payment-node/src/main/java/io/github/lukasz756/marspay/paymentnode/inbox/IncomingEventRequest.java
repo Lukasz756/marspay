@@ -7,26 +7,15 @@ import tools.jackson.databind.JsonNode;
 
 import java.util.UUID;
 
-public record IncomingEventRequest(
-        @NotNull
-        UUID eventId,
+public record IncomingEventRequest(@NotNull UUID eventId,
 
-        @NotBlank
-        @Size(max = 50)
-        String source,
+                                   @NotBlank @Size(max = 50) String source,
 
-        @NotBlank
-        @Size(max = 50)
-        String aggregateType,
+                                   @NotBlank @Size(max = 50) String aggregateType,
 
-        @NotNull
-        UUID aggregateId,
+                                   @NotNull UUID aggregateId,
 
-        @NotBlank
-        @Size(max = 50)
-        String eventType,
+                                   @NotBlank @Size(max = 50) String eventType,
 
-        @NotNull
-        JsonNode payload
-) {
+                                   @NotNull JsonNode payload) {
 }

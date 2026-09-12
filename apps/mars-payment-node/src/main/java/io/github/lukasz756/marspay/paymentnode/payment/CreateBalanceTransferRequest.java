@@ -9,17 +9,11 @@ import java.util.UUID;
 
 public record CreateBalanceTransferRequest(
 
-        @NotNull
-        UUID sourceBalanceAccountId,
+        @NotNull UUID sourceBalanceAccountId,
 
-        @NotNull
-        UUID targetBalanceAccountId,
+        @NotNull UUID targetBalanceAccountId,
 
-        @Positive
-        long amountMinor,
+        @Positive long amountMinor,
 
-        @NotBlank
-        @Size(max = 100)
-        String reference
-) {
+        @NotBlank @Size(max = 100) String reference) {
 }

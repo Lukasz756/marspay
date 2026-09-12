@@ -24,8 +24,7 @@ class MarsPaymentNodeApplicationTests {
 
     @Container
     @ServiceConnection
-    private static final PostgreSQLContainer POSTGRESQL =
-            new PostgreSQLContainer("postgres:17-alpine");
+    private static final PostgreSQLContainer POSTGRESQL = new PostgreSQLContainer("postgres:17-alpine");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

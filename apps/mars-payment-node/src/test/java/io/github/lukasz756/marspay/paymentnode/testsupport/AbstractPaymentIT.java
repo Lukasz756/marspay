@@ -37,41 +37,22 @@ public abstract class AbstractPaymentIT {
     protected InboxProcessor inboxProcessor;
 
     protected PaymentFixture createPaymentFixture() {
-        String suffix = UUID.randomUUID().toString();
+        String suffix = UUID.randomUUID()
+                .toString();
 
-        AccountHolder sourceHolder =
-                accountService.createAccountHolder(
-                        "it-source-" + suffix,
-                        AccountHolderType.PERSON
-                );
+        AccountHolder sourceHolder = accountService.createAccountHolder("it-source-" + suffix,
+                                                                        AccountHolderType.PERSON);
 
-        AccountHolder targetHolder =
-                accountService.createAccountHolder(
-                        "it-target-" + suffix,
-                        AccountHolderType.PERSON
-                );
+        AccountHolder targetHolder = accountService.createAccountHolder("it-target-" + suffix,
+                                                                        AccountHolderType.PERSON);
 
-        BalanceAccount sourceAccount =
-                accountService.openBalanceAccount(
-                        sourceHolder.getId(),
-                        "MCR"
-                );
+        BalanceAccount sourceAccount = accountService.openBalanceAccount(sourceHolder.getId(), "MCR");
 
-        BalanceAccount targetAccount =
-                accountService.openBalanceAccount(
-                        targetHolder.getId(),
-                        "MCR"
-                );
+        BalanceAccount targetAccount = accountService.openBalanceAccount(targetHolder.getId(), "MCR");
 
-        return new PaymentFixture(
-                sourceAccount,
-                targetAccount
-        );
+        return new PaymentFixture(sourceAccount, targetAccount);
     }
 
-    protected record PaymentFixture(
-            BalanceAccount sourceAccount,
-            BalanceAccount targetAccount
-    ) {
+    protected record PaymentFixture(BalanceAccount sourceAccount, BalanceAccount targetAccount) {
     }
 }

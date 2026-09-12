@@ -16,10 +16,8 @@ public class InboxService {
     private final ObjectMapper objectMapper;
     private final PaymentInboxEventHandler paymentInboxEventHandler;
 
-    InboxService(
-            InboxEventRepository inboxEventRepository,
-            ObjectMapper objectMapper, PaymentInboxEventHandler paymentInboxEventHandler
-    ) {
+    InboxService(InboxEventRepository inboxEventRepository, ObjectMapper objectMapper,
+                 PaymentInboxEventHandler paymentInboxEventHandler) {
         this.inboxEventRepository = inboxEventRepository;
         this.objectMapper = objectMapper;
         this.paymentInboxEventHandler = paymentInboxEventHandler;
@@ -28,65 +26,40 @@ public class InboxService {
     @Transactional
     public InboxReceiveResult receive(IncomingEventRequest request) {
         if (inboxEventRepository.existsById(request.eventId())) {
-            return new InboxReceiveResult(
-                    request.eventId(),
-                    true
-            );
+            return new InboxReceiveResult(request.eventId(), true);
         }
 
         try {
-            String payloadJson =
-                    objectMapper.writeValueAsString(request.payload());
+            String payloadJson = objectMapper.writeValueAsString(request.payload());
 
-            InboxEvent event = InboxEvent.pending(
-                    request.eventId(),
-                    request.source(),
-                    request.aggregateType(),
-                    request.aggregateId(),
-                    request.eventType(),
-                    payloadJson
-            );
+            InboxEvent event = InboxEvent.pending(request.eventId(), request.source(), request.aggregateType(),
+                                                  request.aggregateId(), request.eventType(), payloadJson);
 
             inboxEventRepository.saveAndFlush(event);
 
-            return new InboxReceiveResult(
-                    event.getEventId(),
-                    false
-            );
+            return new InboxReceiveResult(event.getEventId(), false);
         } catch (JacksonException exception) {
-            throw new IllegalStateException(
-                    "Cannot serialize inbox event payload",
-                    exception
-            );
+            throw new IllegalStateException("Cannot serialize inbox event payload", exception);
         }
     }
+
     @Transactional(readOnly = true)
     public List<UUID> findReadyEventIds(Instant now) {
         if (now == null) {
-            throw new IllegalArgumentException(
-                    "Current time must not be null"
-            );
+            throw new IllegalArgumentException("Current time must not be null");
         }
 
-        return inboxEventRepository
-                .findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscReceivedAtAsc(
-                        InboxEventStatus.PENDING,
-                        now
-                )
+        return inboxEventRepository.findTop50ByStatusAndAvailableAtLessThanEqualOrderByAvailableAtAscReceivedAtAsc(
+                        InboxEventStatus.PENDING, now)
                 .stream()
                 .map(InboxEvent::getEventId)
                 .toList();
     }
 
     @Transactional
-    public void processEvent(
-            UUID eventId,
-            Instant processedAt
-    ) {
+    public void processEvent(UUID eventId, Instant processedAt) {
         if (processedAt == null) {
-            throw new IllegalArgumentException(
-                    "Processed at must not be null"
-            );
+            throw new IllegalArgumentException("Processed at must not be null");
         }
 
         InboxEvent event = findEvent(eventId);
@@ -100,25 +73,15 @@ public class InboxService {
     }
 
     @Transactional
-    public void recordFailedAttempt(
-            UUID eventId,
-            String error,
-            Instant nextAttemptAt,
-            int maxAttempts
-    ) {
+    public void recordFailedAttempt(UUID eventId, String error, Instant nextAttemptAt, int maxAttempts) {
         InboxEvent event = findEvent(eventId);
 
-        event.recordFailedAttempt(
-                error,
-                nextAttemptAt,
-                maxAttempts
-        );
+        event.recordFailedAttempt(error, nextAttemptAt, maxAttempts);
     }
 
     private InboxEvent findEvent(UUID eventId) {
         return inboxEventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Inbox event not found: " + eventId
-                ));
+                .orElseThrow(() -> new IllegalStateException("Inbox event not " +
+                                                                     "found: " + eventId));
     }
 }

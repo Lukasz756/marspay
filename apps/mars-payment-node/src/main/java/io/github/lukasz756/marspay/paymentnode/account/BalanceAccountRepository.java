@@ -6,12 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface BalanceAccountRepository extends JpaRepository<BalanceAccount, UUID> {
-    boolean existsByAccountHolderIdAndCurrency(
-            UUID accountHolderId,
-            String currency
-    );
+    boolean existsByAccountHolderIdAndCurrency(UUID accountHolderId, String currency);
 
-    List<BalanceAccount> findAllByAccountHolderIdOrderByCurrencyAsc(
-            UUID accountHolderId
-    );
+    List<BalanceAccount> findAllByAccountHolderIdOrderByCurrencyAsc(UUID accountHolderId);
 }

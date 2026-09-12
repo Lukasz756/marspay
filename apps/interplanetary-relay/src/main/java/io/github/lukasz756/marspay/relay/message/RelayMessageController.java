@@ -13,25 +13,16 @@ public class RelayMessageController {
 
     private final RelayMessageService relayMessageService;
 
-    RelayMessageController(
-            RelayMessageService relayMessageService
-    ) {
+    RelayMessageController(RelayMessageService relayMessageService) {
         this.relayMessageService = relayMessageService;
     }
 
     @PostMapping
-    public ResponseEntity<Void> receive(
-            @Valid @RequestBody RelayMessageRequest request
-    ) {
-        RelayReceiveResult result =
-                relayMessageService.receive(request);
+    public ResponseEntity<Void> receive(@Valid @RequestBody RelayMessageRequest request) {
+        RelayReceiveResult result = relayMessageService.receive(request);
 
-        return ResponseEntity
-                .accepted()
-                .header(
-                        "Relay-Duplicate",
-                        Boolean.toString(result.duplicate())
-                )
+        return ResponseEntity.accepted()
+                .header("Relay-Duplicate", Boolean.toString(result.duplicate()))
                 .build();
     }
 }

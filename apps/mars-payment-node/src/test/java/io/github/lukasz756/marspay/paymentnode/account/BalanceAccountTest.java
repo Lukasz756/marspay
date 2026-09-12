@@ -15,10 +15,7 @@ class BalanceAccountTest {
 
     @Test
     void movesAvailableFundsToReserved() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
         account.credit(250);
         account.reserve(100);
 
@@ -28,24 +25,17 @@ class BalanceAccountTest {
 
     @Test
     void doesNotChangeBalancesWhenReservationExceedsAvailableFunds() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
 
         account.credit(200);
-        assertThatThrownBy(() -> account.reserve(2000))
-                .isInstanceOf(InsufficientBalanceException.class);
+        assertThatThrownBy(() -> account.reserve(2000)).isInstanceOf(InsufficientBalanceException.class);
         assertThat(account.getAvailableBalanceMinor()).isEqualTo(200);
         assertThat(account.getReservedBalanceMinor()).isEqualTo(0);
     }
 
     @Test
     void capturesReservedFunds() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
         account.credit(250);
         account.reserve(100);
         account.captureReserved(100);
@@ -56,26 +46,18 @@ class BalanceAccountTest {
 
     @Test
     void doesNotCaptureReservedFundsWhenExceedsReservedFunds() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
         account.credit(250);
         account.reserve(100);
 
-        assertThatThrownBy(() -> account.captureReserved(200)).isInstanceOf(
-                InsufficientReservedBalanceException.class
-        );
+        assertThatThrownBy(() -> account.captureReserved(200)).isInstanceOf(InsufficientReservedBalanceException.class);
         assertThat(account.getAvailableBalanceMinor()).isEqualTo(150);
         assertThat(account.getReservedBalanceMinor()).isEqualTo(100);
     }
 
     @Test
     void releasesReservedFundsBackToAvailableBalance() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
         account.credit(250);
         account.reserve(100);
         account.releaseReserved(100);
@@ -89,15 +71,11 @@ class BalanceAccountTest {
     @ParameterizedTest
     @ValueSource(longs = {0, -100})
     void rejectsNonPositiveReservation(long amountMinor) {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "MCR"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "MCR");
 
         account.credit(250);
 
-        assertThatThrownBy(() -> account.reserve(amountMinor))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> account.reserve(amountMinor)).isInstanceOf(IllegalArgumentException.class);
 
         assertThat(account.getAvailableBalanceMinor()).isEqualTo(250);
         assertThat(account.getReservedBalanceMinor()).isZero();
@@ -107,19 +85,14 @@ class BalanceAccountTest {
     void rejectsUnsupportedCurrency() {
         UUID accountHolderId = UUID.randomUUID();
 
-        assertThatThrownBy(
-                () -> BalanceAccount.open(accountHolderId, "EUR")
-        )
-                .isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> BalanceAccount.open(accountHolderId, "EUR")).isInstanceOf(
+                        IllegalArgumentException.class)
                 .hasMessage("Currency must be MCR");
     }
 
     @Test
     void normalizesSupportedCurrency() {
-        BalanceAccount account = BalanceAccount.open(
-                UUID.randomUUID(),
-                "mcr"
-        );
+        BalanceAccount account = BalanceAccount.open(UUID.randomUUID(), "mcr");
 
         assertThat(account.getCurrency()).isEqualTo("MCR");
     }

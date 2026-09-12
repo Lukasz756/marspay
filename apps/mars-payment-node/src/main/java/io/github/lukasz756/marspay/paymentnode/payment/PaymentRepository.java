@@ -6,8 +6,5 @@ import java.util.UUID;
 
 interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
-    boolean existsBySourceBalanceAccountIdAndReference(
-            UUID sourceBalanceAccountId,
-            String reference
-    );
+    boolean existsBySourceBalanceAccountIdAndReference(UUID sourceBalanceAccountId, String reference);
 }

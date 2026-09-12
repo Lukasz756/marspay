@@ -14,31 +14,23 @@ import java.util.List;
 @Component
 public class RelayDispatcher {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(RelayDispatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(RelayDispatcher.class);
 
     private static final int MAX_ATTEMPTS = 5;
 
-    private static final Duration RETRY_DELAY =
-            Duration.ofSeconds(30);
+    private static final Duration RETRY_DELAY = Duration.ofSeconds(30);
 
     private final RelayMessageService relayMessageService;
     private final RelayTransport relayTransport;
 
-    public RelayDispatcher(
-            RelayMessageService relayMessageService,
-            RelayTransport relayTransport
-    ) {
+    public RelayDispatcher(RelayMessageService relayMessageService, RelayTransport relayTransport) {
         this.relayMessageService = relayMessageService;
         this.relayTransport = relayTransport;
     }
 
     @Scheduled(fixedDelay = 5000)
     public void dispatchReadyMessages() {
-        List<RelayDeliveryMessage> messages =
-                relayMessageService.findReadyMessages(
-                        Instant.now()
-                );
+        List<RelayDeliveryMessage> messages = relayMessageService.findReadyMessages(Instant.now());
 
         for (RelayDeliveryMessage message : messages) {
             dispatch(message);
@@ -49,37 +41,27 @@ public class RelayDispatcher {
         try {
             relayTransport.deliver(message);
         } catch (RuntimeException exception) {
-            logger.warn(
-                    "Failed to deliver relay message: eventId={}",
-                    message.eventId(),
-                    exception
-            );
+            logger.warn("Failed to deliver relay message: eventId={}", message.eventId(), exception);
 
-            relayMessageService.recordFailedAttempt(
-                    message.eventId(),
-                    errorMessage(exception),
-                    Instant.now().plus(RETRY_DELAY),
-                    MAX_ATTEMPTS
-            );
+            relayMessageService.recordFailedAttempt(message.eventId(), errorMessage(exception),
+                                                    Instant.now()
+                                                            .plus(RETRY_DELAY), MAX_ATTEMPTS);
 
             return;
         }
 
-        relayMessageService.markDelivered(
-                message.eventId(),
-                Instant.now()
-        );
+        relayMessageService.markDelivered(message.eventId(), Instant.now());
     }
 
     private String errorMessage(RuntimeException exception) {
         String message = exception.getMessage();
 
         if (message == null || message.isBlank()) {
-            return exception.getClass().getSimpleName();
+            return exception.getClass()
+                    .getSimpleName();
         }
 
-        return exception.getClass().getSimpleName()
-                + ": "
-                + message;
+        return exception.getClass()
+                .getSimpleName() + ": " + message;
     }
 }

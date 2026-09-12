@@ -7,16 +7,9 @@ import java.util.UUID;
 
 public class PaymentInvalidStatusException extends RuntimeException {
 
-    public PaymentInvalidStatusException(
-            UUID paymentId,
-            PaymentStatus actualStatus,
-            PaymentStatus... expectedStatuses
-    ) {
-        super(
-                "Payment " + paymentId
-                        + " has status " + actualStatus
-                        + "; expected one of "
-                        + Arrays.toString(expectedStatuses)
-        );
+    public PaymentInvalidStatusException(UUID paymentId, PaymentStatus actualStatus,
+                                         PaymentStatus... expectedStatuses) {
+        super("Payment " + paymentId + " has status " + actualStatus + "; expected one of " + Arrays.toString(
+                expectedStatuses));
     }
 }

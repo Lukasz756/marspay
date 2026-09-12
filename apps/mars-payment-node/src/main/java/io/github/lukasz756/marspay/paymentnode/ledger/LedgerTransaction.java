@@ -42,53 +42,34 @@ public class LedgerTransaction {
     protected LedgerTransaction() {
     }
 
-    private LedgerTransaction(
-            UUID paymentId,
-            LedgerTransactionType type,
-            String currency,
-            String reference
-    ) {
+    private LedgerTransaction(UUID paymentId, LedgerTransactionType type, String currency, String reference) {
         if (paymentId == null) {
-            throw new IllegalArgumentException(
-                    "Payment id must not be null"
-            );
+            throw new IllegalArgumentException("Payment id must not be null");
         }
 
         if (type == null) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction type must not be null"
-            );
+            throw new IllegalArgumentException("Ledger transaction type must not be null");
         }
 
         if (currency == null || currency.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction currency must not be blank"
-            );
+            throw new IllegalArgumentException("Ledger transaction currency must not be blank");
         }
 
-        String normalizedCurrency =
-                currency.trim().toUpperCase(Locale.ROOT);
+        String normalizedCurrency = currency.trim()
+                .toUpperCase(Locale.ROOT);
 
         if (!normalizedCurrency.matches("[A-Z]{3}")) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction currency must contain "
-                            + "exactly three letters"
-            );
+            throw new IllegalArgumentException("Ledger transaction currency must contain " + "exactly three letters");
         }
 
         if (reference == null || reference.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction reference must not be blank"
-            );
+            throw new IllegalArgumentException("Ledger transaction reference must not be blank");
         }
 
         String normalizedReference = reference.trim();
 
         if (normalizedReference.length() > 100) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction reference must be "
-                            + "at most 100 characters"
-            );
+            throw new IllegalArgumentException("Ledger transaction reference must be " + "at most 100 characters");
         }
 
         this.paymentId = paymentId;
@@ -97,18 +78,9 @@ public class LedgerTransaction {
         this.reference = normalizedReference;
     }
 
-    public static LedgerTransaction forPayment(
-            UUID paymentId,
-            LedgerTransactionType type,
-            String currency,
-            String reference
-    ) {
-        return new LedgerTransaction(
-                paymentId,
-                type,
-                currency,
-                reference
-        );
+    public static LedgerTransaction forPayment(UUID paymentId, LedgerTransactionType type, String currency,
+                                               String reference) {
+        return new LedgerTransaction(paymentId, type, currency, reference);
     }
 
     public UUID getId() {

@@ -27,20 +27,10 @@ public class IdempotencyRecord {
     @Column(nullable = false, updatable = false, length = 50)
     private IdempotencyScope scope;
 
-    @Column(
-            name = "idempotency_key",
-            nullable = false,
-            updatable = false,
-            length = 255
-    )
+    @Column(name = "idempotency_key", nullable = false, updatable = false, length = 255)
     private String idempotencyKey;
 
-    @Column(
-            name = "request_hash",
-            nullable = false,
-            updatable = false,
-            length = 64
-    )
+    @Column(name = "request_hash", nullable = false, updatable = false, length = 64)
     private String requestHash;
 
     @Enumerated(EnumType.STRING)
@@ -71,36 +61,23 @@ public class IdempotencyRecord {
     protected IdempotencyRecord() {
     }
 
-    private IdempotencyRecord(
-            IdempotencyScope scope,
-            String idempotencyKey,
-            String requestHash
-    ) {
+    private IdempotencyRecord(IdempotencyScope scope, String idempotencyKey, String requestHash) {
         if (scope == null) {
-            throw new IllegalArgumentException(
-                    "Idempotency scope must not be null"
-            );
+            throw new IllegalArgumentException("Idempotency scope must not be null");
         }
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Idempotency key must not be blank"
-            );
+            throw new IllegalArgumentException("Idempotency key must not be blank");
         }
 
         String normalizedKey = idempotencyKey.trim();
 
         if (normalizedKey.length() > 255) {
-            throw new IllegalArgumentException(
-                    "Idempotency key must be at most 255 characters"
-            );
+            throw new IllegalArgumentException("Idempotency key must be at most 255 characters");
         }
 
-        if (requestHash == null
-                || !requestHash.matches("[0-9a-f]{64}")) {
-            throw new IllegalArgumentException(
-                    "Request hash must be a lowercase SHA-256 hash"
-            );
+        if (requestHash == null || !requestHash.matches("[0-9a-f]{64}")) {
+            throw new IllegalArgumentException("Request hash must be a lowercase SHA-256 hash");
         }
 
         this.scope = scope;
@@ -109,46 +86,25 @@ public class IdempotencyRecord {
         this.status = IdempotencyStatus.IN_PROGRESS;
     }
 
-    public static IdempotencyRecord start(
-            IdempotencyScope scope,
-            String idempotencyKey,
-            String requestHash
-    ) {
-        return new IdempotencyRecord(
-                scope,
-                idempotencyKey,
-                requestHash
-        );
+    public static IdempotencyRecord start(IdempotencyScope scope, String idempotencyKey, String requestHash) {
+        return new IdempotencyRecord(scope, idempotencyKey, requestHash);
     }
 
-    public void complete(
-            int responseStatus,
-            String responseBody,
-            String responseLocation
-    ) {
+    public void complete(int responseStatus, String responseBody, String responseLocation) {
         if (status != IdempotencyStatus.IN_PROGRESS) {
-            throw new IllegalStateException(
-                    "Idempotency record is already completed"
-            );
+            throw new IllegalStateException("Idempotency record is already completed");
         }
 
         if (responseStatus < 100 || responseStatus > 599) {
-            throw new IllegalArgumentException(
-                    "Invalid HTTP response status"
-            );
+            throw new IllegalArgumentException("Invalid HTTP response status");
         }
 
         if (responseBody == null || responseBody.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Response body must not be blank"
-            );
+            throw new IllegalArgumentException("Response body must not be blank");
         }
 
-        if (responseLocation != null
-                && responseLocation.length() > 255) {
-            throw new IllegalArgumentException(
-                    "Response location must be at most 255 characters"
-            );
+        if (responseLocation != null && responseLocation.length() > 255) {
+            throw new IllegalArgumentException("Response location must be at most 255 characters");
         }
 
         this.responseStatus = responseStatus;

@@ -12,13 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class PaymentExceptionHandler {
 
     @ExceptionHandler(BalanceTransferAlreadyExistsException.class)
-    ProblemDetail handleBalanceTransferAlreadyExists(
-            BalanceTransferAlreadyExistsException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handleBalanceTransferAlreadyExists(BalanceTransferAlreadyExistsException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Balance transfer already exists");
 
@@ -26,13 +21,8 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(BalanceTransferCurrencyMismatchException.class)
-    ProblemDetail handleBalanceTransferCurrencyMismatch(
-            BalanceTransferCurrencyMismatchException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handleBalanceTransferCurrencyMismatch(BalanceTransferCurrencyMismatchException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Balance transfer currency mismatch");
 
@@ -40,13 +30,8 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(BalanceTransferNotFoundException.class)
-    ProblemDetail handleBalanceTransferNotFound(
-            BalanceTransferNotFoundException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage()
-        );
+    ProblemDetail handleBalanceTransferNotFound(BalanceTransferNotFoundException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 
         problem.setTitle("Balance transfer not found");
 
@@ -54,13 +39,8 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(BalanceTransferSameAccountException.class)
-    ProblemDetail handleBalanceTransferSameAccount(
-            BalanceTransferSameAccountException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handleBalanceTransferSameAccount(BalanceTransferSameAccountException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Source and target accounts are the same");
 
@@ -68,39 +48,24 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(PaymentAlreadyExistsException.class)
-    ProblemDetail handlePaymentAlreadyExistsException(
-            PaymentAlreadyExistsException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handlePaymentAlreadyExistsException(PaymentAlreadyExistsException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         problem.setTitle("Payment already exists");
 
         return problem;
     }
 
     @ExceptionHandler(PaymentCurrencyMismatchException.class)
-    ProblemDetail handlePaymentCurrencyMismatchException(
-            PaymentCurrencyMismatchException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handlePaymentCurrencyMismatchException(PaymentCurrencyMismatchException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         problem.setTitle("Source and target accounts have different currency");
 
         return problem;
     }
 
     @ExceptionHandler(PaymentSameAccountException.class)
-    ProblemDetail handlePaymentSameAccount(
-            PaymentSameAccountException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handlePaymentSameAccount(PaymentSameAccountException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Source and target accounts are the same");
 
@@ -109,10 +74,7 @@ public class PaymentExceptionHandler {
 
     @ExceptionHandler(PaymentNotFoundException.class)
     ProblemDetail handlePaymentNotFound(PaymentNotFoundException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage()
-        );
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 
         problem.setTitle("Payment not found");
 
@@ -120,13 +82,8 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(PaymentInvalidStatusException.class)
-    ProblemDetail handlePaymentInvalidStatus(
-            PaymentInvalidStatusException exception
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+    ProblemDetail handlePaymentInvalidStatus(PaymentInvalidStatusException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 
         problem.setTitle("Invalid payment status");
 
@@ -134,22 +91,15 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    ProblemDetail handleDataIntegrityViolation(
-            DataIntegrityViolationException exception
-    ) {
+    ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException exception) {
         Throwable cause = exception;
 
         while (cause != null) {
-            if (cause instanceof ConstraintViolationException violation
-                    && "uq_payment_source_reference".equals(
-                    violation.getConstraintName()
-            )) {
+            if (cause instanceof ConstraintViolationException violation && "uq_payment_source_reference".equals(
+                    violation.getConstraintName())) {
 
-                ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                        HttpStatus.CONFLICT,
-                        "Payment with this reference already exists "
-                                + "for the source account."
-                );
+                ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Payment with this " +
+                        "reference already exists " + "for the source account.");
 
                 problem.setTitle("Payment already exists");
 

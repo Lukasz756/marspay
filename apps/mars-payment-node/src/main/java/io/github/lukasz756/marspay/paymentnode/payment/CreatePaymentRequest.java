@@ -7,10 +7,6 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
-public record CreatePaymentRequest(
-        @NotNull UUID sourceBalanceAccountId,
-        @NotNull UUID targetBalanceAccountId,
-        @Positive long amountMinor,
-        @NotBlank @Size(max = 100) String reference
-) {
+public record CreatePaymentRequest(@NotNull UUID sourceBalanceAccountId, @NotNull UUID targetBalanceAccountId,
+                                   @Positive long amountMinor, @NotBlank @Size(max = 100) String reference) {
 }

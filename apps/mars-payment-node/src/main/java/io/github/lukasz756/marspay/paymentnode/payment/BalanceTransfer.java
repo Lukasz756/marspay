@@ -17,18 +17,10 @@ public class BalanceTransfer {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(
-            name = "source_balance_account_id",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "source_balance_account_id", nullable = false, updatable = false)
     private UUID sourceBalanceAccountId;
 
-    @Column(
-            name = "target_balance_account_id",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "target_balance_account_id", nullable = false, updatable = false)
     private UUID targetBalanceAccountId;
 
     @Column(name = "amount_minor", nullable = false, updatable = false)
@@ -48,15 +40,14 @@ public class BalanceTransfer {
 
     }
 
-    private BalanceTransfer(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor, String currency, String reference) {
+    private BalanceTransfer(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor,
+                            String currency, String reference) {
         if (sourceBalanceAccountId == null || targetBalanceAccountId == null) {
             throw new IllegalArgumentException("Source/target balance account cannot be null");
         }
 
         if (sourceBalanceAccountId.equals(targetBalanceAccountId)) {
-            throw new BalanceTransferSameAccountException(
-                    sourceBalanceAccountId
-            );
+            throw new BalanceTransferSameAccountException(sourceBalanceAccountId);
         }
 
         if (amountMinor <= 0) {
@@ -64,24 +55,21 @@ public class BalanceTransfer {
         }
 
         if (reference == null || reference.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Transfer reference must not be blank"
-            );
+            throw new IllegalArgumentException("Transfer reference must not be blank");
         }
 
         String normalizedReference = reference.trim();
 
         if (normalizedReference.length() > 100) {
-            throw new IllegalArgumentException(
-                    "Transfer reference must be at most 100 characters"
-            );
+            throw new IllegalArgumentException("Transfer reference must be at most 100 characters");
         }
 
         if (currency == null || currency.isBlank()) {
             throw new IllegalArgumentException("Currency must not be blank");
         }
 
-        String normalizedCurrency = currency.trim().toUpperCase(Locale.ROOT);
+        String normalizedCurrency = currency.trim()
+                .toUpperCase(Locale.ROOT);
 
         if (!normalizedCurrency.matches("[A-Z]{3}")) {
             throw new IllegalArgumentException("Currency must contain exactly three letters");
@@ -95,13 +83,8 @@ public class BalanceTransfer {
 
     }
 
-    public static BalanceTransfer create(
-            UUID sourceBalanceAccountId,
-            UUID targetBalanceAccountId,
-            long amountMinor,
-            String currency,
-            String reference
-    ) {
+    public static BalanceTransfer create(UUID sourceBalanceAccountId, UUID targetBalanceAccountId, long amountMinor,
+                                         String currency, String reference) {
         return new BalanceTransfer(sourceBalanceAccountId, targetBalanceAccountId, amountMinor, currency, reference);
     }
 

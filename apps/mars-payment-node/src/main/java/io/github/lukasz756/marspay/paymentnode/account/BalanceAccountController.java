@@ -19,76 +19,57 @@ public class BalanceAccountController {
     }
 
     @PostMapping("/api/account-holders/{accountHolderId}/balance-accounts")
-    public ResponseEntity<BalanceAccountResponse> openBalanceAccount(
-            @PathVariable UUID accountHolderId,
-            @Valid @RequestBody OpenBalanceAccountRequest request
-    ) {
+    public ResponseEntity<BalanceAccountResponse> openBalanceAccount(@PathVariable UUID accountHolderId,
+                                                                     @Valid @RequestBody OpenBalanceAccountRequest request) {
         BalanceAccount balanceAccount = accountService.openBalanceAccount(accountHolderId, request.currency());
 
         BalanceAccountResponse response = BalanceAccountResponse.from(balanceAccount);
 
-        URI location = URI.create(
-                "/api/balance-accounts/" + response.id()
-        );
+        URI location = URI.create("/api/balance-accounts/" + response.id());
 
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location)
+                .body(response);
     }
 
     @GetMapping("/api/balance-accounts/{balanceAccountId}")
-    public ResponseEntity<BalanceAccountResponse> getBalanceAccount(
-            @PathVariable UUID balanceAccountId
-    ) {
-        BalanceAccount balanceAccount =
-                accountService.getBalanceAccount(balanceAccountId);
+    public ResponseEntity<BalanceAccountResponse> getBalanceAccount(@PathVariable UUID balanceAccountId) {
+        BalanceAccount balanceAccount = accountService.getBalanceAccount(balanceAccountId);
 
-        return ResponseEntity.ok(
-                BalanceAccountResponse.from(balanceAccount)
-        );
+        return ResponseEntity.ok(BalanceAccountResponse.from(balanceAccount));
     }
 
     @GetMapping("/api/account-holders/{accountHolderId}/balance-accounts")
-    public ResponseEntity<List<BalanceAccountResponse>> getBalanceAccounts(
-            @PathVariable UUID accountHolderId
-    ) {
-        List<BalanceAccountResponse> response = accountService
-                .getBalanceAccounts(accountHolderId)
-                .stream()
-                .map(BalanceAccountResponse::from)
-                .toList();
+    public ResponseEntity<List<BalanceAccountResponse>> getBalanceAccounts(@PathVariable UUID accountHolderId) {
+        List<BalanceAccountResponse> response =
+                accountService.getBalanceAccounts(accountHolderId)
+                        .stream()
+                        .map(BalanceAccountResponse::from)
+                        .toList();
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/api/balance-accounts/{balanceAccountId}/credits")
-    public ResponseEntity<BalanceOperationResponse> creditBalanceAccount(
-            @PathVariable UUID balanceAccountId,
-            @Valid @RequestBody CreditBalanceAccountRequest request
-    ) {
-        BalanceOperation operation = accountService.creditBalanceAccount(
-                balanceAccountId,
-                request.amountMinor(),
-                request.reference()
-        );
+    public ResponseEntity<BalanceOperationResponse> creditBalanceAccount(@PathVariable UUID balanceAccountId,
+                                                                         @Valid @RequestBody CreditBalanceAccountRequest request) {
+        BalanceOperation operation = accountService.creditBalanceAccount(balanceAccountId, request.amountMinor(),
+                                                                         request.reference());
 
-        BalanceOperationResponse response =
-                BalanceOperationResponse.from(operation);
+        BalanceOperationResponse response = BalanceOperationResponse.from(operation);
 
-        URI location = URI.create(
-                "/api/balance-operations/" + response.id()
-        );
+        URI location = URI.create("/api/balance-operations/" + response.id());
 
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location)
+                .body(response);
     }
 
     @GetMapping("/api/balance-accounts/{balanceAccountId}/operations")
-    public ResponseEntity<List<BalanceOperationResponse>> getBalanceOperations(
-            @PathVariable UUID balanceAccountId
-    ) {
-        List<BalanceOperationResponse> response = accountService
-                .getBalanceOperations(balanceAccountId)
-                .stream()
-                .map(BalanceOperationResponse::from)
-                .toList();
+    public ResponseEntity<List<BalanceOperationResponse>> getBalanceOperations(@PathVariable UUID balanceAccountId) {
+        List<BalanceOperationResponse> response =
+                accountService.getBalanceOperations(balanceAccountId)
+                        .stream()
+                        .map(BalanceOperationResponse::from)
+                        .toList();
 
         return ResponseEntity.ok(response);
     }

@@ -18,17 +18,11 @@ public class RelayEventController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> receiveEvent(
-            @Valid @RequestBody IncomingEventRequest request
-    ) {
+    public ResponseEntity<Void> receiveEvent(@Valid @RequestBody IncomingEventRequest request) {
         InboxReceiveResult result = inboxService.receive(request);
 
-        return ResponseEntity
-                .accepted()
-                .header(
-                        "Inbox-Duplicate",
-                        Boolean.toString(result.duplicate())
-                )
+        return ResponseEntity.accepted()
+                .header("Inbox-Duplicate", Boolean.toString(result.duplicate()))
                 .build();
     }
 }

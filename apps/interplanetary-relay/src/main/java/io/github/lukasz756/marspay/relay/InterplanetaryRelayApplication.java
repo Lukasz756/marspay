@@ -12,9 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class InterplanetaryRelayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(
-                InterplanetaryRelayApplication.class,
-                args
-        );
+        SpringApplication.run(InterplanetaryRelayApplication.class, args);
     }
 }

@@ -67,12 +67,11 @@ public class BalanceAccount {
             throw new IllegalArgumentException("Currency must not be blank");
         }
 
-        String normalizedCurrency = currency.trim().toUpperCase(Locale.ROOT);
+        String normalizedCurrency = currency.trim()
+                .toUpperCase(Locale.ROOT);
 
         if (!normalizedCurrency.equals("MCR")) {
-            throw new IllegalArgumentException(
-                    "Currency must be MCR"
-            );
+            throw new IllegalArgumentException("Currency must be MCR");
         }
 
         this.accountHolderId = accountHolderId;
@@ -92,21 +91,13 @@ public class BalanceAccount {
         }
 
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Credit amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Credit amount must be greater than 0");
         }
 
         try {
-            availableBalanceMinor = Math.addExact(
-                    availableBalanceMinor,
-                    amountMinor
-            );
+            availableBalanceMinor = Math.addExact(availableBalanceMinor, amountMinor);
         } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException(
-                    "Available balance exceeds supported range",
-                    exception
-            );
+            throw new IllegalArgumentException("Available balance exceeds supported range", exception);
         }
     }
 
@@ -116,17 +107,11 @@ public class BalanceAccount {
         }
 
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Debit amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Debit amount must be greater than 0");
         }
 
         if (availableBalanceMinor < amountMinor) {
-            throw new InsufficientBalanceException(
-                    id,
-                    availableBalanceMinor,
-                    amountMinor
-            );
+            throw new InsufficientBalanceException(id, availableBalanceMinor, amountMinor);
         }
 
         availableBalanceMinor -= amountMinor;
@@ -146,35 +131,23 @@ public class BalanceAccount {
         }
 
         try {
-            long newReservedBalanceMinor = Math.addExact(
-                    reservedBalanceMinor,
-                    amountMinor
-            );
+            long newReservedBalanceMinor = Math.addExact(reservedBalanceMinor, amountMinor);
 
             availableBalanceMinor -= amountMinor;
             reservedBalanceMinor = newReservedBalanceMinor;
         } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException(
-                    "Reserved balance exceeds supported range",
-                    exception
-            );
+            throw new IllegalArgumentException("Reserved balance exceeds supported range", exception);
         }
 
     }
 
     public void captureReserved(long amountMinor) {
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Capture amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Capture amount must be greater than 0");
         }
 
         if (reservedBalanceMinor < amountMinor) {
-            throw new InsufficientReservedBalanceException(
-                    id,
-                    reservedBalanceMinor,
-                    amountMinor
-            );
+            throw new InsufficientReservedBalanceException(id, reservedBalanceMinor, amountMinor);
         }
 
         reservedBalanceMinor -= amountMinor;
@@ -182,32 +155,20 @@ public class BalanceAccount {
 
     public void releaseReserved(long amountMinor) {
         if (amountMinor <= 0) {
-            throw new IllegalArgumentException(
-                    "Release amount must be greater than 0"
-            );
+            throw new IllegalArgumentException("Release amount must be greater than 0");
         }
 
         if (reservedBalanceMinor < amountMinor) {
-            throw new InsufficientReservedBalanceException(
-                    id,
-                    reservedBalanceMinor,
-                    amountMinor
-            );
+            throw new InsufficientReservedBalanceException(id, reservedBalanceMinor, amountMinor);
         }
 
         try {
-            long newAvailableBalanceMinor = Math.addExact(
-                    availableBalanceMinor,
-                    amountMinor
-            );
+            long newAvailableBalanceMinor = Math.addExact(availableBalanceMinor, amountMinor);
 
             reservedBalanceMinor -= amountMinor;
             availableBalanceMinor = newAvailableBalanceMinor;
         } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException(
-                    "Available balance exceeds supported range",
-                    exception
-            );
+            throw new IllegalArgumentException("Available balance exceeds supported range", exception);
         }
     }
 

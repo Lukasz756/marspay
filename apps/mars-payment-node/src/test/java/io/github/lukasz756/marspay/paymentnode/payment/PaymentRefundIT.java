@@ -20,8 +20,7 @@ class PaymentRefundIT {
 
     @Container
     @ServiceConnection
-    private static final PostgreSQLContainer POSTGRESQL =
-            new PostgreSQLContainer("postgres:17-alpine");
+    private static final PostgreSQLContainer POSTGRESQL = new PostgreSQLContainer("postgres:17-alpine");
 
     @Autowired
     private AccountService accountService;
@@ -39,27 +38,21 @@ class PaymentRefundIT {
 
         paymentService.requestRefund(payment.getId());
 
-        BalanceAccount refreshedTarget =
-                accountService.getBalanceAccount(targetAccount.getId());
+        BalanceAccount refreshedTarget = accountService.getBalanceAccount(targetAccount.getId());
 
-        Payment refreshedPayment =
-                paymentService.getPayment(payment.getId());
+        Payment refreshedPayment = paymentService.getPayment(payment.getId());
 
         assertThat(refreshedTarget.getAvailableBalanceMinor()).isZero();
         assertThat(refreshedTarget.getReservedBalanceMinor()).isEqualTo(300);
-        assertThat(refreshedPayment.getStatus())
-                .isEqualTo(PaymentStatus.REFUND_PENDING);
+        assertThat(refreshedPayment.getStatus()).isEqualTo(PaymentStatus.REFUND_PENDING);
 
         paymentService.confirmRefund(payment.getId());
 
-        BalanceAccount refundedSource =
-                accountService.getBalanceAccount(sourceAccount.getId());
+        BalanceAccount refundedSource = accountService.getBalanceAccount(sourceAccount.getId());
 
-        BalanceAccount refundedTarget =
-                accountService.getBalanceAccount(targetAccount.getId());
+        BalanceAccount refundedTarget = accountService.getBalanceAccount(targetAccount.getId());
 
-        Payment refundedPayment =
-                paymentService.getPayment(payment.getId());
+        Payment refundedPayment = paymentService.getPayment(payment.getId());
 
         assertThat(refundedSource.getAvailableBalanceMinor()).isEqualTo(1_000);
         assertThat(refundedSource.getReservedBalanceMinor()).isZero();
@@ -67,8 +60,7 @@ class PaymentRefundIT {
         assertThat(refundedTarget.getAvailableBalanceMinor()).isZero();
         assertThat(refundedTarget.getReservedBalanceMinor()).isZero();
 
-        assertThat(refundedPayment.getStatus())
-                .isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(refundedPayment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
     }
 
     @Test
@@ -82,14 +74,11 @@ class PaymentRefundIT {
         paymentService.requestRefund(payment.getId());
         paymentService.failRefund(payment.getId());
 
-        BalanceAccount restoredSource =
-                accountService.getBalanceAccount(sourceAccount.getId());
+        BalanceAccount restoredSource = accountService.getBalanceAccount(sourceAccount.getId());
 
-        BalanceAccount restoredTarget =
-                accountService.getBalanceAccount(targetAccount.getId());
+        BalanceAccount restoredTarget = accountService.getBalanceAccount(targetAccount.getId());
 
-        Payment failedRefundPayment =
-                paymentService.getPayment(payment.getId());
+        Payment failedRefundPayment = paymentService.getPayment(payment.getId());
 
         assertThat(restoredSource.getAvailableBalanceMinor()).isEqualTo(700);
         assertThat(restoredSource.getReservedBalanceMinor()).isZero();
@@ -97,60 +86,33 @@ class PaymentRefundIT {
         assertThat(restoredTarget.getAvailableBalanceMinor()).isEqualTo(300);
         assertThat(restoredTarget.getReservedBalanceMinor()).isZero();
 
-        assertThat(failedRefundPayment.getStatus())
-                .isEqualTo(PaymentStatus.CAPTURED);
+        assertThat(failedRefundPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
     }
 
     private RefundFixture createCapturedPayment(String scenario) {
-        AccountHolder sourceHolder = accountService.createAccountHolder(
-                "refund-source-" + scenario,
-                AccountHolderType.PERSON
-        );
+        AccountHolder sourceHolder = accountService.createAccountHolder("refund-source-" + scenario,
+                                                                        AccountHolderType.PERSON);
 
-        AccountHolder targetHolder = accountService.createAccountHolder(
-                "refund-target-" + scenario,
-                AccountHolderType.PERSON
-        );
+        AccountHolder targetHolder = accountService.createAccountHolder("refund-target-" + scenario,
+                                                                        AccountHolderType.PERSON);
 
-        BalanceAccount sourceAccount = accountService.openBalanceAccount(
-                sourceHolder.getId(),
-                "MCR"
-        );
+        BalanceAccount sourceAccount = accountService.openBalanceAccount(sourceHolder.getId(), "MCR");
 
-        BalanceAccount targetAccount = accountService.openBalanceAccount(
-                targetHolder.getId(),
-                "MCR"
-        );
+        BalanceAccount targetAccount = accountService.openBalanceAccount(targetHolder.getId(), "MCR");
 
-        accountService.creditBalanceAccount(
-                sourceAccount.getId(),
-                1_000,
-                "refund-funding-" + scenario
-        );
+        accountService.creditBalanceAccount(sourceAccount.getId(), 1_000, "refund-funding-" + scenario);
 
-        Payment payment = paymentService.createPayment(
-                sourceAccount.getId(),
-                targetAccount.getId(),
-                300,
-                "refund-payment-" + scenario
-        );
+        Payment payment = paymentService.createPayment(sourceAccount.getId(), targetAccount.getId(), 300, "refund" +
+                "-payment-" + scenario);
 
         paymentService.requestAuthorization(payment.getId());
         paymentService.confirmAuthorization(payment.getId());
         paymentService.requestCapture(payment.getId());
         paymentService.confirmCapture(payment.getId());
 
-        return new RefundFixture(
-                payment,
-                sourceAccount,
-                targetAccount
-        );
+        return new RefundFixture(payment, sourceAccount, targetAccount);
     }
 
-    private record RefundFixture(
-            Payment payment,
-            BalanceAccount sourceAccount,
-            BalanceAccount targetAccount
-    ) {
+    private record RefundFixture(Payment payment, BalanceAccount sourceAccount, BalanceAccount targetAccount) {
     }
 }

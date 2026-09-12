@@ -27,23 +27,13 @@ public class RelayMessage {
     @Column(nullable = false, updatable = false, length = 50)
     private String destination;
 
-    @Column(
-            name = "aggregate_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "aggregate_type", nullable = false, updatable = false, length = 50)
     private String aggregateType;
 
     @Column(name = "aggregate_id", nullable = false, updatable = false)
     private UUID aggregateId;
 
-    @Column(
-            name = "event_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "event_type", nullable = false, updatable = false, length = 50)
     private String eventType;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TEXT")
@@ -80,62 +70,38 @@ public class RelayMessage {
     protected RelayMessage() {
     }
 
-    private RelayMessage(
-            UUID eventId,
-            String source,
-            String destination,
-            String aggregateType,
-            UUID aggregateId,
-            String eventType,
-            String payload,
-            Instant availableAt
-    ) {
+    private RelayMessage(UUID eventId, String source, String destination, String aggregateType, UUID aggregateId,
+                         String eventType, String payload, Instant availableAt) {
         if (eventId == null) {
-            throw new IllegalArgumentException(
-                    "Relay event id must not be null"
-            );
+            throw new IllegalArgumentException("Relay event id must not be null");
         }
 
         if (source == null || source.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay message source must not be blank"
-            );
+            throw new IllegalArgumentException("Relay message source must not be blank");
         }
 
         if (destination == null || destination.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay message destination must not be blank"
-            );
+            throw new IllegalArgumentException("Relay message destination must not be blank");
         }
 
         if (aggregateType == null || aggregateType.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay aggregate type must not be blank"
-            );
+            throw new IllegalArgumentException("Relay aggregate type must not be blank");
         }
 
         if (aggregateId == null) {
-            throw new IllegalArgumentException(
-                    "Relay aggregate id must not be null"
-            );
+            throw new IllegalArgumentException("Relay aggregate id must not be null");
         }
 
         if (eventType == null || eventType.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay event type must not be blank"
-            );
+            throw new IllegalArgumentException("Relay event type must not be blank");
         }
 
         if (payload == null || payload.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay payload must not be blank"
-            );
+            throw new IllegalArgumentException("Relay payload must not be blank");
         }
 
         if (availableAt == null) {
-            throw new IllegalArgumentException(
-                    "Relay available time must not be null"
-            );
+            throw new IllegalArgumentException("Relay available time must not be null");
         }
 
         this.eventId = eventId;
@@ -150,35 +116,17 @@ public class RelayMessage {
         this.availableAt = availableAt;
     }
 
-    public static RelayMessage pending(
-            UUID eventId,
-            String source,
-            String destination,
-            String aggregateType,
-            UUID aggregateId,
-            String eventType,
-            String payload,
-            Instant availableAt
-    ) {
-        return new RelayMessage(
-                eventId,
-                source,
-                destination,
-                aggregateType,
-                aggregateId,
-                eventType,
-                payload,
-                availableAt
-        );
+    public static RelayMessage pending(UUID eventId, String source, String destination, String aggregateType,
+                                       UUID aggregateId, String eventType, String payload, Instant availableAt) {
+        return new RelayMessage(eventId, source, destination, aggregateType, aggregateId, eventType, payload,
+                                availableAt);
     }
 
     public void markDelivered(Instant deliveredAt) {
         requirePendingStatus();
 
         if (deliveredAt == null) {
-            throw new IllegalArgumentException(
-                    "Delivered at must not be null"
-            );
+            throw new IllegalArgumentException("Delivered at must not be null");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -187,29 +135,19 @@ public class RelayMessage {
         this.lastError = null;
     }
 
-    public void recordFailedAttempt(
-            String error,
-            Instant nextAttemptAt,
-            int maxAttempts
-    ) {
+    public void recordFailedAttempt(String error, Instant nextAttemptAt, int maxAttempts) {
         requirePendingStatus();
 
         if (error == null || error.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Relay delivery error must not be blank"
-            );
+            throw new IllegalArgumentException("Relay delivery error must not be blank");
         }
 
         if (nextAttemptAt == null) {
-            throw new IllegalArgumentException(
-                    "Next attempt time must not be null"
-            );
+            throw new IllegalArgumentException("Next attempt time must not be null");
         }
 
         if (maxAttempts <= 0) {
-            throw new IllegalArgumentException(
-                    "Maximum attempts must be greater than 0"
-            );
+            throw new IllegalArgumentException("Maximum attempts must be greater than 0");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -224,9 +162,7 @@ public class RelayMessage {
 
     private void requirePendingStatus() {
         if (status != RelayMessageStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Only pending relay messages can be delivered"
-            );
+            throw new IllegalStateException("Only pending relay messages can be delivered");
         }
     }
 

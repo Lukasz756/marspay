@@ -13,54 +13,26 @@ public class LedgerService {
     private final LedgerTransactionRepository transactionRepository;
     private final LedgerEntryRepository entryRepository;
 
-    LedgerService(
-            LedgerTransactionRepository transactionRepository,
-            LedgerEntryRepository entryRepository
-    ) {
+    LedgerService(LedgerTransactionRepository transactionRepository, LedgerEntryRepository entryRepository) {
         this.transactionRepository = transactionRepository;
         this.entryRepository = entryRepository;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void recordPaymentMovement(
-            UUID paymentId,
-            LedgerTransactionType type,
-            String currency,
-            String reference,
-            UUID sourceBalanceAccountId,
-            LedgerBalanceBucket sourceBucket,
-            UUID targetBalanceAccountId,
-            LedgerBalanceBucket targetBucket,
-            long amountMinor
-    ) {
-        LedgerTransaction transaction = LedgerTransaction.forPayment(
-                paymentId,
-                type,
-                currency,
-                reference
-        );
+    public void recordPaymentMovement(UUID paymentId, LedgerTransactionType type, String currency, String reference,
+                                      UUID sourceBalanceAccountId, LedgerBalanceBucket sourceBucket,
+                                      UUID targetBalanceAccountId, LedgerBalanceBucket targetBucket, long amountMinor) {
+        LedgerTransaction transaction = LedgerTransaction.forPayment(paymentId, type, currency, reference);
 
-        LedgerTransaction savedTransaction =
-                transactionRepository.saveAndFlush(transaction);
+        LedgerTransaction savedTransaction = transactionRepository.saveAndFlush(transaction);
 
-        LedgerEntry decreaseEntry = LedgerEntry.decrease(
-                savedTransaction.getId(),
-                sourceBalanceAccountId,
-                sourceBucket,
-                amountMinor
-        );
+        LedgerEntry decreaseEntry = LedgerEntry.decrease(savedTransaction.getId(), sourceBalanceAccountId,
+                                                         sourceBucket, amountMinor);
 
-        LedgerEntry increaseEntry = LedgerEntry.increase(
-                savedTransaction.getId(),
-                targetBalanceAccountId,
-                targetBucket,
-                amountMinor
-        );
+        LedgerEntry increaseEntry = LedgerEntry.increase(savedTransaction.getId(), targetBalanceAccountId,
+                                                         targetBucket, amountMinor);
 
-        List<LedgerEntry> entries = List.of(
-                decreaseEntry,
-                increaseEntry
-        );
+        List<LedgerEntry> entries = List.of(decreaseEntry, increaseEntry);
 
         validateBalanced(entries);
 
@@ -69,50 +41,34 @@ public class LedgerService {
 
     @Transactional(readOnly = true)
     public List<LedgerTransactionResponse> getPaymentLedger(UUID paymentId) {
-        return transactionRepository
-                .findAllByPaymentIdOrderByCreatedAtAsc(paymentId)
+        return transactionRepository.findAllByPaymentIdOrderByCreatedAtAsc(paymentId)
                 .stream()
                 .map(transaction -> {
-                    List<LedgerEntry> entries = entryRepository
-                            .findAllByLedgerTransactionIdOrderByCreatedAtAsc(
-                                    transaction.getId()
-                            );
+                    List<LedgerEntry> entries =
+                            entryRepository.findAllByLedgerTransactionIdOrderByCreatedAtAsc(transaction.getId());
 
-                    return LedgerTransactionResponse.from(
-                            transaction,
-                            entries
-                    );
+                    return LedgerTransactionResponse.from(transaction, entries);
                 })
                 .toList();
     }
 
     private void validateBalanced(List<LedgerEntry> entries) {
         if (entries.size() < 2) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction must contain at least two entries"
-            );
+            throw new IllegalArgumentException("Ledger transaction must contain at least two entries");
         }
 
         long total = 0;
 
         try {
             for (LedgerEntry entry : entries) {
-                total = Math.addExact(
-                        total,
-                        entry.getAmountMinor()
-                );
+                total = Math.addExact(total, entry.getAmountMinor());
             }
         } catch (ArithmeticException exception) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction total exceeds supported range",
-                    exception
-            );
+            throw new IllegalArgumentException("Ledger transaction total exceeds supported range", exception);
         }
 
         if (total != 0) {
-            throw new IllegalArgumentException(
-                    "Ledger transaction entries must sum to 0"
-            );
+            throw new IllegalArgumentException("Ledger transaction entries must sum to 0");
         }
     }
 }

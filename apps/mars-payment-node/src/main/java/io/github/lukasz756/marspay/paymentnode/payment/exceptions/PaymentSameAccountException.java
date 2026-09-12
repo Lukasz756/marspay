@@ -5,9 +5,6 @@ import java.util.UUID;
 public class PaymentSameAccountException extends RuntimeException {
 
     public PaymentSameAccountException(UUID balanceAccountId) {
-        super(
-                "Source and target balance accounts must be different: "
-                        + balanceAccountId
-        );
+        super("Source and target balance accounts must be different: " + balanceAccountId);
     }
 }

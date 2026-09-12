@@ -9,9 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class EarthPaymentServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(
-                EarthPaymentServiceApplication.class,
-                args
-        );
+        SpringApplication.run(EarthPaymentServiceApplication.class, args);
     }
 }

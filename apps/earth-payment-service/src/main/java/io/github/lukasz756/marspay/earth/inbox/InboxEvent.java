@@ -24,23 +24,13 @@ public class InboxEvent {
     @Column(nullable = false, updatable = false, length = 50)
     private String source;
 
-    @Column(
-            name = "aggregate_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "aggregate_type", nullable = false, updatable = false, length = 50)
     private String aggregateType;
 
     @Column(name = "aggregate_id", nullable = false, updatable = false)
     private UUID aggregateId;
 
-    @Column(
-            name = "event_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "event_type", nullable = false, updatable = false, length = 50)
     private String eventType;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TEXT")
@@ -77,48 +67,30 @@ public class InboxEvent {
     protected InboxEvent() {
     }
 
-    private InboxEvent(
-            UUID eventId,
-            String source,
-            String aggregateType,
-            UUID aggregateId,
-            String eventType,
-            String payload
-    ) {
+    private InboxEvent(UUID eventId, String source, String aggregateType, UUID aggregateId, String eventType,
+                       String payload) {
         if (eventId == null) {
-            throw new IllegalArgumentException(
-                    "Inbox event id must not be null"
-            );
+            throw new IllegalArgumentException("Inbox event id must not be null");
         }
 
         if (source == null || source.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox event source must not be blank"
-            );
+            throw new IllegalArgumentException("Inbox event source must not be blank");
         }
 
         if (aggregateType == null || aggregateType.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox aggregate type must not be blank"
-            );
+            throw new IllegalArgumentException("Inbox aggregate type must not be blank");
         }
 
         if (aggregateId == null) {
-            throw new IllegalArgumentException(
-                    "Inbox aggregate id must not be null"
-            );
+            throw new IllegalArgumentException("Inbox aggregate id must not be null");
         }
 
         if (eventType == null || eventType.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox event type must not be blank"
-            );
+            throw new IllegalArgumentException("Inbox event type must not be blank");
         }
 
         if (payload == null || payload.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox payload must not be blank"
-            );
+            throw new IllegalArgumentException("Inbox payload must not be blank");
         }
 
         this.eventId = eventId;
@@ -132,31 +104,16 @@ public class InboxEvent {
         this.availableAt = Instant.now();
     }
 
-    public static InboxEvent pending(
-            UUID eventId,
-            String source,
-            String aggregateType,
-            UUID aggregateId,
-            String eventType,
-            String payload
-    ) {
-        return new InboxEvent(
-                eventId,
-                source,
-                aggregateType,
-                aggregateId,
-                eventType,
-                payload
-        );
+    public static InboxEvent pending(UUID eventId, String source, String aggregateType, UUID aggregateId,
+                                     String eventType, String payload) {
+        return new InboxEvent(eventId, source, aggregateType, aggregateId, eventType, payload);
     }
 
     public void markProcessed(Instant processedAt) {
         requirePendingStatus();
 
         if (processedAt == null) {
-            throw new IllegalArgumentException(
-                    "Processed at must not be null"
-            );
+            throw new IllegalArgumentException("Processed at must not be null");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -165,29 +122,19 @@ public class InboxEvent {
         this.lastError = null;
     }
 
-    public void recordFailedAttempt(
-            String error,
-            Instant nextAttemptAt,
-            int maxAttempts
-    ) {
+    public void recordFailedAttempt(String error, Instant nextAttemptAt, int maxAttempts) {
         requirePendingStatus();
 
         if (error == null || error.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Inbox error must not be blank"
-            );
+            throw new IllegalArgumentException("Inbox error must not be blank");
         }
 
         if (nextAttemptAt == null) {
-            throw new IllegalArgumentException(
-                    "Next attempt time must not be null"
-            );
+            throw new IllegalArgumentException("Next attempt time must not be null");
         }
 
         if (maxAttempts <= 0) {
-            throw new IllegalArgumentException(
-                    "Maximum attempts must be greater than 0"
-            );
+            throw new IllegalArgumentException("Maximum attempts must be greater than 0");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -202,9 +149,7 @@ public class InboxEvent {
 
     private void requirePendingStatus() {
         if (status != InboxEventStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Only pending inbox events can be processed"
-            );
+            throw new IllegalStateException("Only pending inbox events can be processed");
         }
     }
 

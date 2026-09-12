@@ -20,18 +20,14 @@ public class AccountHolderController {
     @PostMapping
     public ResponseEntity<AccountHolderResponse> createAccountHolder(@Valid @RequestBody CreateAccountHolderRequest request) {
 
-        AccountHolder accountHolder = accountService.createAccountHolder(
-                request.reference(),
-                request.type()
-        );
+        AccountHolder accountHolder = accountService.createAccountHolder(request.reference(), request.type());
 
         AccountHolderResponse response = AccountHolderResponse.from(accountHolder);
 
-        URI location = URI.create(
-                "/api/account-holders/" + response.id()
-        );
+        URI location = URI.create("/api/account-holders/" + response.id());
 
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location)
+                .body(response);
     }
 
     @GetMapping("/{id}")

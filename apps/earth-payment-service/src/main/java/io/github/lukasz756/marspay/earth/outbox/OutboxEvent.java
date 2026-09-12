@@ -16,28 +16,14 @@ public class OutboxEvent {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "aggregate_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "aggregate_type", nullable = false, updatable = false, length = 50)
     private OutboxAggregateType aggregateType;
 
-    @Column(
-            name = "aggregate_id",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "aggregate_id", nullable = false, updatable = false)
     private UUID aggregateId;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "event_type",
-            nullable = false,
-            updatable = false,
-            length = 50
-    )
+    @Column(name = "event_type", nullable = false, updatable = false, length = 50)
     private OutboxEventType eventType;
 
     @Column(nullable = false, updatable = false, columnDefinition = "TEXT")
@@ -74,34 +60,22 @@ public class OutboxEvent {
     protected OutboxEvent() {
     }
 
-    private OutboxEvent(
-            OutboxAggregateType aggregateType,
-            UUID aggregateId,
-            OutboxEventType eventType,
-            String payload
-    ) {
+    private OutboxEvent(OutboxAggregateType aggregateType, UUID aggregateId, OutboxEventType eventType,
+                        String payload) {
         if (aggregateType == null) {
-            throw new IllegalArgumentException(
-                    "Outbox aggregate type must not be null"
-            );
+            throw new IllegalArgumentException("Outbox aggregate type must not be null");
         }
 
         if (aggregateId == null) {
-            throw new IllegalArgumentException(
-                    "Outbox aggregate id must not be null"
-            );
+            throw new IllegalArgumentException("Outbox aggregate id must not be null");
         }
 
         if (eventType == null) {
-            throw new IllegalArgumentException(
-                    "Outbox event type must not be null"
-            );
+            throw new IllegalArgumentException("Outbox event type must not be null");
         }
 
         if (payload == null || payload.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Outbox payload must not be blank"
-            );
+            throw new IllegalArgumentException("Outbox payload must not be blank");
         }
 
         this.aggregateType = aggregateType;
@@ -113,26 +87,15 @@ public class OutboxEvent {
         this.availableAt = Instant.now();
     }
 
-    public static OutboxEvent pendingPayment(
-            UUID paymentId,
-            OutboxEventType eventType,
-            String payload
-    ) {
-        return new OutboxEvent(
-                OutboxAggregateType.PAYMENT,
-                paymentId,
-                eventType,
-                payload
-        );
+    public static OutboxEvent pendingPayment(UUID paymentId, OutboxEventType eventType, String payload) {
+        return new OutboxEvent(OutboxAggregateType.PAYMENT, paymentId, eventType, payload);
     }
 
     public void markPublished(Instant publishedAt) {
         requirePendingStatus();
 
         if (publishedAt == null) {
-            throw new IllegalArgumentException(
-                    "Published at must not be null"
-            );
+            throw new IllegalArgumentException("Published at must not be null");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -141,29 +104,19 @@ public class OutboxEvent {
         this.lastError = null;
     }
 
-    public void recordFailedAttempt(
-            String error,
-            Instant nextAttemptAt,
-            int maxAttempts
-    ) {
+    public void recordFailedAttempt(String error, Instant nextAttemptAt, int maxAttempts) {
         requirePendingStatus();
 
         if (error == null || error.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Outbox error must not be blank"
-            );
+            throw new IllegalArgumentException("Outbox error must not be blank");
         }
 
         if (nextAttemptAt == null) {
-            throw new IllegalArgumentException(
-                    "Next attempt time must not be null"
-            );
+            throw new IllegalArgumentException("Next attempt time must not be null");
         }
 
         if (maxAttempts <= 0) {
-            throw new IllegalArgumentException(
-                    "Maximum attempts must be greater than 0"
-            );
+            throw new IllegalArgumentException("Maximum attempts must be greater than 0");
         }
 
         this.attemptCount = Math.incrementExact(attemptCount);
@@ -178,9 +131,7 @@ public class OutboxEvent {
 
     private void requirePendingStatus() {
         if (status != OutboxEventStatus.PENDING) {
-            throw new IllegalStateException(
-                    "Only pending outbox events can be processed"
-            );
+            throw new IllegalStateException("Only pending outbox events can be processed");
         }
     }
 

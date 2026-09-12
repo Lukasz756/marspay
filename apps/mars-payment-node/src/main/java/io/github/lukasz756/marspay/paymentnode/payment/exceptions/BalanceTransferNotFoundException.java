@@ -5,9 +5,6 @@ import java.util.UUID;
 public class BalanceTransferNotFoundException extends RuntimeException {
 
     public BalanceTransferNotFoundException(UUID transferId) {
-        super(
-                "Balance transfer with id '%s' not found"
-                        .formatted(transferId)
-        );
+        super("Balance transfer with id '%s' not found".formatted(transferId));
     }
 }
