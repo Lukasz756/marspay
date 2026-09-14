@@ -39,6 +39,9 @@ public class Payment {
     @Column(nullable = false, length = 30)
     private PaymentStatus status;
 
+    @Column(name = "processing_reason", length = 100)
+    private String processingReason;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -107,6 +110,7 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZED);
         }
 
+        processingReason = null;
         status = PaymentStatus.CAPTURE_PENDING;
     }
 
@@ -115,14 +119,16 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURE_PENDING);
         }
 
+        processingReason = null;
         status = PaymentStatus.CAPTURED;
     }
 
-    public void failCapture() {
+    public void failCapture(String reason) {
         if (status != PaymentStatus.CAPTURE_PENDING) {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURE_PENDING);
         }
 
+        processingReason = normalizeFailureReason(reason);
         status = PaymentStatus.AUTHORIZED;
     }
 
@@ -131,6 +137,7 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZED);
         }
 
+        processingReason = null;
         status = PaymentStatus.CANCEL_PENDING;
     }
 
@@ -139,14 +146,16 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CANCEL_PENDING);
         }
 
+        processingReason = null;
         status = PaymentStatus.CANCELLED;
     }
 
-    public void failCancel() {
+    public void failCancel(String reason) {
         if (status != PaymentStatus.CANCEL_PENDING) {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CANCEL_PENDING);
         }
 
+        processingReason = normalizeFailureReason(reason);
         status = PaymentStatus.AUTHORIZED;
     }
 
@@ -155,6 +164,7 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CAPTURED);
         }
 
+        processingReason = null;
         status = PaymentStatus.REFUND_PENDING;
     }
 
@@ -163,14 +173,16 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.REFUND_PENDING);
         }
 
+        processingReason = null;
         status = PaymentStatus.REFUNDED;
     }
 
-    public void failRefund() {
+    public void failRefund(String reason) {
         if (status != PaymentStatus.REFUND_PENDING) {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.REFUND_PENDING);
         }
 
+        processingReason = normalizeFailureReason(reason);
         status = PaymentStatus.CAPTURED;
     }
 
@@ -179,6 +191,7 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.CREATED);
         }
 
+        processingReason = null;
         status = PaymentStatus.AUTHORIZATION_PENDING;
     }
 
@@ -187,15 +200,31 @@ public class Payment {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZATION_PENDING);
         }
 
+        processingReason = null;
         status = PaymentStatus.AUTHORIZED;
     }
 
-    public void declineAuthorization() {
+    public void declineAuthorization(String reason) {
         if (status != PaymentStatus.AUTHORIZATION_PENDING) {
             throw new PaymentInvalidStatusException(id, status, PaymentStatus.AUTHORIZATION_PENDING);
         }
 
+        processingReason = normalizeFailureReason(reason);
         status = PaymentStatus.DECLINED;
+    }
+
+    private String normalizeFailureReason(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Payment processing failure reason must not be blank");
+        }
+
+        String normalizedReason = reason.trim();
+
+        if (normalizedReason.length() > 100) {
+            throw new IllegalArgumentException("Payment processing failure reason must be at most 100 characters");
+        }
+
+        return normalizedReason;
     }
 
     public UUID getId() {
@@ -224,6 +253,10 @@ public class Payment {
 
     public PaymentStatus getStatus() {
         return status;
+    }
+
+    public String getProcessingReason() {
+        return processingReason;
     }
 
     public long getVersion() {

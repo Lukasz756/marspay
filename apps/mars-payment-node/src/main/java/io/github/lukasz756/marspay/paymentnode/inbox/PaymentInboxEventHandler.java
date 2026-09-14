@@ -38,7 +38,7 @@ class PaymentInboxEventHandler {
 
             case "PAYMENT_DECLINED" -> {
                 requireStatus(payload, "DECLINED");
-                paymentService.declineAuthorization(payload.paymentId());
+                paymentService.declineAuthorization(payload.paymentId(), requireProcessingReason(payload));
             }
 
             case "PAYMENT_CAPTURED" -> {
@@ -48,7 +48,7 @@ class PaymentInboxEventHandler {
 
             case "PAYMENT_CAPTURE_FAILED" -> {
                 requireStatus(payload, "CAPTURE_FAILED");
-                paymentService.failCapture(payload.paymentId());
+                paymentService.failCapture(payload.paymentId(), requireProcessingReason(payload));
             }
 
             case "PAYMENT_CANCELLED" -> {
@@ -58,7 +58,7 @@ class PaymentInboxEventHandler {
 
             case "PAYMENT_CANCEL_FAILED" -> {
                 requireStatus(payload, "CANCEL_FAILED");
-                paymentService.failCancel(payload.paymentId());
+                paymentService.failCancel(payload.paymentId(), requireProcessingReason(payload));
             }
 
             case "PAYMENT_REFUNDED" -> {
@@ -68,7 +68,7 @@ class PaymentInboxEventHandler {
 
             case "PAYMENT_REFUND_FAILED" -> {
                 requireStatus(payload, "REFUND_FAILED");
-                paymentService.failRefund(payload.paymentId());
+                paymentService.failRefund(payload.paymentId(), requireProcessingReason(payload));
             }
 
             default ->
@@ -124,5 +124,14 @@ class PaymentInboxEventHandler {
             throw new IllegalArgumentException("Payment event status " + payload.status() + " does not match expected" +
                                                        " status " + expectedStatus);
         }
+    }
+
+    private String requireProcessingReason(PaymentResultPayload payload) {
+        if (payload.reason() == null || payload.reason()
+                .isBlank()) {
+            throw new IllegalArgumentException("Failed payment event processing reason must not be blank");
+        }
+
+        return payload.reason();
     }
 }

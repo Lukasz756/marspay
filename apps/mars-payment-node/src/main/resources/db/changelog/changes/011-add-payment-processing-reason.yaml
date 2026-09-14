@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-add-payment-processing-reason
+      author: lukasz756
+      changes:
+        - addColumn:
+            tableName: payment
+            columns:
+              - column:
+                  name: processing_reason
+                  type: VARCHAR(100)
+
+        - addColumn:
+            tableName: payment_operation
+            columns:
+              - column:
+                  name: processing_reason
+                  type: VARCHAR(100)

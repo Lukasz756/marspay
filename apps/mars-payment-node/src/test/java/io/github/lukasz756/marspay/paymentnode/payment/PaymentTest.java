@@ -34,9 +34,10 @@ class PaymentTest {
         Payment capturedPayment = createCapturedPayment();
 
         capturedPayment.requestRefund();
-        capturedPayment.failRefund();
+        capturedPayment.failRefund("REFUND_WINDOW_EXPIRED");
 
         assertThat(capturedPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
+        assertThat(capturedPayment.getProcessingReason()).isEqualTo("REFUND_WINDOW_EXPIRED");
     }
 
     @Test
@@ -61,7 +62,8 @@ class PaymentTest {
     void rejectsRefundFailureWhenRefundIsNotPending() {
         Payment capturedPayment = createCapturedPayment();
 
-        assertThatThrownBy(() -> capturedPayment.failRefund()).isInstanceOf(PaymentInvalidStatusException.class);
+        assertThatThrownBy(() -> capturedPayment.failRefund("REFUND_WINDOW_EXPIRED")).isInstanceOf(
+                PaymentInvalidStatusException.class);
 
         assertThat(capturedPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
     }
@@ -73,6 +75,33 @@ class PaymentTest {
         payment.requestRefund();
 
         assertThatThrownBy(payment::requestRefund).isInstanceOf(PaymentInvalidStatusException.class);
+
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_PENDING);
+    }
+
+    @Test
+    void clearsPreviousProcessingReasonWhenFailedOperationIsRetried() {
+        Payment payment = createCapturedPayment();
+
+        payment.requestRefund();
+        payment.failRefund("  REFUND_WINDOW_EXPIRED  ");
+
+        assertThat(payment.getProcessingReason()).isEqualTo("REFUND_WINDOW_EXPIRED");
+
+        payment.requestRefund();
+
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_PENDING);
+        assertThat(payment.getProcessingReason()).isNull();
+    }
+
+    @Test
+    void rejectsBlankProcessingReasonWithoutChangingPendingPayment() {
+        Payment payment = createCapturedPayment();
+
+        payment.requestRefund();
+
+        assertThatThrownBy(() -> payment.failRefund("   ")).isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Payment processing failure reason must not be blank");
 
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUND_PENDING);
     }

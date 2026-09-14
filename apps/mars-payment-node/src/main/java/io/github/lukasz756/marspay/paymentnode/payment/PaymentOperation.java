@@ -31,6 +31,9 @@ public class PaymentOperation {
     @Column(name = "amount_minor", nullable = false, updatable = false)
     private long amountMinor;
 
+    @Column(name = "processing_reason", updatable = false, length = 100)
+    private String processingReason;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -38,7 +41,7 @@ public class PaymentOperation {
     protected PaymentOperation() {
     }
 
-    private PaymentOperation(UUID paymentId, PaymentOperationType type, long amountMinor) {
+    private PaymentOperation(UUID paymentId, PaymentOperationType type, long amountMinor, String processingReason) {
         if (paymentId == null) {
             throw new IllegalArgumentException("Payment id must not be null");
         }
@@ -54,10 +57,34 @@ public class PaymentOperation {
         this.paymentId = paymentId;
         this.type = type;
         this.amountMinor = amountMinor;
+        this.processingReason = normalizeProcessingReason(processingReason);
     }
 
     public static PaymentOperation record(UUID paymentId, PaymentOperationType type, long amountMinor) {
-        return new PaymentOperation(paymentId, type, amountMinor);
+        return new PaymentOperation(paymentId, type, amountMinor, null);
+    }
+
+    public static PaymentOperation record(UUID paymentId, PaymentOperationType type, long amountMinor,
+                                          String processingReason) {
+        return new PaymentOperation(paymentId, type, amountMinor, processingReason);
+    }
+
+    private String normalizeProcessingReason(String processingReason) {
+        if (processingReason == null) {
+            return null;
+        }
+
+        if (processingReason.isBlank()) {
+            throw new IllegalArgumentException("Payment operation processing reason must not be blank");
+        }
+
+        String normalizedReason = processingReason.trim();
+
+        if (normalizedReason.length() > 100) {
+            throw new IllegalArgumentException("Payment operation processing reason must be at most 100 characters");
+        }
+
+        return normalizedReason;
     }
 
     public UUID getId() {
@@ -74,6 +101,10 @@ public class PaymentOperation {
 
     public long getAmountMinor() {
         return amountMinor;
+    }
+
+    public String getProcessingReason() {
+        return processingReason;
     }
 
     public Instant getCreatedAt() {

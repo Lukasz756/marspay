@@ -1,12 +1,7 @@
 package io.github.lukasz756.marspay.paymentnode;
 
-import io.github.lukasz756.marspay.paymentnode.account.AccountHolder;
-import io.github.lukasz756.marspay.paymentnode.account.AccountHolderType;
 import io.github.lukasz756.marspay.paymentnode.account.AccountService;
-import io.github.lukasz756.marspay.paymentnode.account.BalanceAccount;
-import io.github.lukasz756.marspay.paymentnode.payment.Payment;
 import io.github.lukasz756.marspay.paymentnode.payment.PaymentService;
-import io.github.lukasz756.marspay.paymentnode.payment.PaymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @SpringBootTest
-class MarsPaymentNodeApplicationTests {
+class MarsPaymentNodeApplicationIT {
 
     @Container
     @ServiceConnection

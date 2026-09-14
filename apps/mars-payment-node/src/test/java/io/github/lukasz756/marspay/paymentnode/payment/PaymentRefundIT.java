@@ -72,7 +72,7 @@ class PaymentRefundIT {
         BalanceAccount targetAccount = fixture.targetAccount();
 
         paymentService.requestRefund(payment.getId());
-        paymentService.failRefund(payment.getId());
+        paymentService.failRefund(payment.getId(), "REFUND_WINDOW_EXPIRED");
 
         BalanceAccount restoredSource = accountService.getBalanceAccount(sourceAccount.getId());
 
@@ -87,6 +87,7 @@ class PaymentRefundIT {
         assertThat(restoredTarget.getReservedBalanceMinor()).isZero();
 
         assertThat(failedRefundPayment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
+        assertThat(failedRefundPayment.getProcessingReason()).isEqualTo("REFUND_WINDOW_EXPIRED");
     }
 
     private RefundFixture createCapturedPayment(String scenario) {

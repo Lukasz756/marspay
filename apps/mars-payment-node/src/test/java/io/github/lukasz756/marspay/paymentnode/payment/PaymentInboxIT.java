@@ -110,4 +110,44 @@ class PaymentInboxIT extends AbstractPaymentIT {
 
         assertThat(sourceAccount.getReservedBalanceMinor()).isEqualTo(300);
     }
+
+    @Test
+    void exposesEarthDeclineReasonInPaymentAndOperationHistory() throws Exception {
+        PaymentFixture fixture = createPaymentFixture();
+
+        UUID sourceAccountId = fixture.sourceAccount()
+                .getId();
+
+        accountService.creditBalanceAccount(sourceAccountId, 1_000, "decline-funding-" + UUID.randomUUID());
+
+        Payment payment = paymentService.createPayment(sourceAccountId, fixture.targetAccount()
+                .getId(), 300, "risk-declined-" + UUID.randomUUID());
+
+        paymentService.requestAuthorization(payment.getId());
+
+        UUID eventId = UUID.randomUUID();
+        PaymentResultPayload payload = new PaymentResultPayload(1, payment.getId(), "DECLINED", "RISK_DECLINED",
+                                                                Instant.now());
+
+        IncomingEventRequest request = new IncomingEventRequest(eventId, "EARTH_PAYMENT_SERVICE", "PAYMENT",
+                                                                payment.getId(), "PAYMENT_DECLINED",
+                                                                objectMapper.valueToTree(payload));
+
+        mockMvc.perform(post("/internal/relay/events").contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsBytes(request)))
+                .andExpect(status().isAccepted());
+
+        inboxService.processEvent(eventId, Instant.now());
+
+        mockMvc.perform(get("/api/payments/{paymentId}", payment.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DECLINED"))
+                .andExpect(jsonPath("$.processingReason").value("RISK_DECLINED"))
+                .andExpect(jsonPath("$.updatedAt").isNotEmpty());
+
+        mockMvc.perform(get("/api/payments/{paymentId}/operations", payment.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[2].type").value("AUTHORIZATION_DECLINED"))
+                .andExpect(jsonPath("$[2].processingReason").value("RISK_DECLINED"));
+    }
 }

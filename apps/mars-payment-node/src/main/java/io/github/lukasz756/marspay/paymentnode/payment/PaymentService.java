@@ -110,7 +110,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment declineAuthorization(UUID paymentId) {
+    public Payment declineAuthorization(UUID paymentId, String processingReason) {
         Payment payment =
                 paymentRepository.findById(paymentId)
                         .orElseThrow(() -> new PaymentNotFoundException(paymentId));
@@ -119,10 +119,10 @@ public class PaymentService {
                 balanceAccountRepository.findById(payment.getSourceBalanceAccountId())
                         .orElseThrow(() -> new BalanceAccountNotFoundException(payment.getSourceBalanceAccountId()));
 
-        payment.declineAuthorization();
+        payment.declineAuthorization(processingReason);
         sourceAccount.releaseReserved(payment.getAmountMinor());
 
-        recordOperation(payment, PaymentOperationType.AUTHORIZATION_DECLINED);
+        recordOperation(payment, PaymentOperationType.AUTHORIZATION_DECLINED, payment.getProcessingReason());
 
         ledgerService.recordPaymentMovement(payment.getId(), LedgerTransactionType.PAYMENT_AUTHORIZATION_DECLINED,
                                             payment.getCurrency(), payment.getReference(), sourceAccount.getId(),
@@ -184,14 +184,14 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment failCapture(UUID paymentId) {
+    public Payment failCapture(UUID paymentId, String processingReason) {
         Payment payment =
                 paymentRepository.findById(paymentId)
                         .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        payment.failCapture();
+        payment.failCapture(processingReason);
 
-        recordOperation(payment, PaymentOperationType.CAPTURE_FAILED);
+        recordOperation(payment, PaymentOperationType.CAPTURE_FAILED, payment.getProcessingReason());
 
         return payment;
     }
@@ -236,14 +236,14 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment failCancel(UUID paymentId) {
+    public Payment failCancel(UUID paymentId, String processingReason) {
         Payment payment =
                 paymentRepository.findById(paymentId)
                         .orElseThrow(() -> new PaymentNotFoundException(paymentId));
 
-        payment.failCancel();
+        payment.failCancel(processingReason);
 
-        recordOperation(payment, PaymentOperationType.CANCEL_FAILED);
+        recordOperation(payment, PaymentOperationType.CANCEL_FAILED, payment.getProcessingReason());
 
         return payment;
     }
@@ -299,7 +299,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Payment failRefund(UUID paymentId) {
+    public Payment failRefund(UUID paymentId, String processingReason) {
         Payment payment =
                 paymentRepository.findById(paymentId)
                         .orElseThrow(() -> new PaymentNotFoundException(paymentId));
@@ -308,10 +308,10 @@ public class PaymentService {
                 balanceAccountRepository.findById(payment.getTargetBalanceAccountId())
                         .orElseThrow(() -> new BalanceAccountNotFoundException(payment.getTargetBalanceAccountId()));
 
-        payment.failRefund();
+        payment.failRefund(processingReason);
         targetAccount.releaseReserved(payment.getAmountMinor());
 
-        recordOperation(payment, PaymentOperationType.REFUND_FAILED);
+        recordOperation(payment, PaymentOperationType.REFUND_FAILED, payment.getProcessingReason());
 
         return payment;
     }
@@ -327,6 +327,13 @@ public class PaymentService {
 
     private void recordOperation(Payment payment, PaymentOperationType type) {
         PaymentOperation operation = PaymentOperation.record(payment.getId(), type, payment.getAmountMinor());
+
+        paymentOperationRepository.save(operation);
+    }
+
+    private void recordOperation(Payment payment, PaymentOperationType type, String processingReason) {
+        PaymentOperation operation = PaymentOperation.record(payment.getId(), type, payment.getAmountMinor(),
+                                                             processingReason);
 
         paymentOperationRepository.save(operation);
     }

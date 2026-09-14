@@ -38,3 +38,7 @@ databaseChangeLog:
   - include:
       file: changes/010-create-inbox-event.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/011-add-payment-processing-reason.yaml
+      relativeToChangelogFile: true
