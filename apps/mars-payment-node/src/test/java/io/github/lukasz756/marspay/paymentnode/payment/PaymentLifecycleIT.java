@@ -19,9 +19,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class PaymentLifecycleIT extends AbstractPaymentIT {
 
@@ -129,6 +127,7 @@ class PaymentLifecycleIT extends AbstractPaymentIT {
                                                                 objectMapper.valueToTree(payload));
 
         mockMvc.perform(post("/internal/relay/events").contentType(MediaType.APPLICATION_JSON)
+                                .with(relayJwt())
                                 .content(objectMapper.writeValueAsBytes(request)))
                 .andExpect(status().isAccepted())
                 .andExpect(header().string("Inbox-Duplicate", "false"));

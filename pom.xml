@@ -28,6 +28,7 @@
         <module>apps/mars-payment-node</module>
         <module>apps/interplanetary-relay</module>
         <module>apps/earth-payment-service</module>
+        <module>apps/marspay-authorization-server</module>
     </modules>
 
     <build>

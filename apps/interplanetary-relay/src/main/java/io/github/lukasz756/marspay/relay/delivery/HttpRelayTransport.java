@@ -1,6 +1,7 @@
 package io.github.lukasz756.marspay.relay.delivery;
 
 import io.github.lukasz756.marspay.relay.message.RelayDeliveryMessage;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -18,9 +19,10 @@ public class HttpRelayTransport implements RelayTransport {
     private final ObjectMapper objectMapper;
     private final RelayProperties relayProperties;
 
-    public HttpRelayTransport(RestClient.Builder restClientBuilder, ObjectMapper objectMapper,
+    public HttpRelayTransport(@Qualifier("deliveryRestClient") RestClient deliveryRestClient,
+                              ObjectMapper objectMapper,
                               RelayProperties relayProperties) {
-        this.restClient = restClientBuilder.build();
+        this.restClient = deliveryRestClient;
         this.objectMapper = objectMapper;
         this.relayProperties = relayProperties;
     }

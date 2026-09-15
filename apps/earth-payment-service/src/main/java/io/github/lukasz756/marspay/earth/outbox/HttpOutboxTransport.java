@@ -1,5 +1,6 @@
 package io.github.lukasz756.marspay.earth.outbox;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -17,25 +18,27 @@ public class HttpOutboxTransport implements OutboxTransport {
 
     private static final URI RELAY_URL = URI.create("http://localhost:8081/api/relay/messages");
 
-    private static final String SOURCE = "EARTH_PAYMENT_SERVICE";
-
-    private static final String DESTINATION = "MARS_PAYMENT_NODE";
-
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public HttpOutboxTransport(RestClient.Builder restClientBuilder, ObjectMapper objectMapper) {
-        this.restClient = restClientBuilder.build();
+    public HttpOutboxTransport(
+            @Qualifier("relayRestClient")
+            RestClient relayRestClient,
+            ObjectMapper objectMapper
+    ) {
+        this.restClient = relayRestClient;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void publish(OutboxMessage message) {
-        RelayRequest request = new RelayRequest(message.eventId(), SOURCE, DESTINATION,
-                                                message.aggregateType()
-                                                        .name(), message.aggregateId(), message.eventType()
-                                                        .name(),
-                                                deserializePayload(message));
+        RelayRequest request = new RelayRequest(
+                message.eventId(),
+                message.aggregateType().name(),
+                message.aggregateId(),
+                message.eventType().name(),
+                deserializePayload(message)
+        );
 
         restClient.post()
                 .uri(RELAY_URL)
@@ -53,7 +56,7 @@ public class HttpOutboxTransport implements OutboxTransport {
         }
     }
 
-    private record RelayRequest(UUID eventId, String source, String destination, String aggregateType, UUID aggregateId,
+    private record RelayRequest(UUID eventId, String aggregateType, UUID aggregateId,
                                 String eventType, JsonNode payload) {
     }
 }

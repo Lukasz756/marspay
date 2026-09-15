@@ -1,0 +1,51 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: marspay-authorization-server
+
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:9000
+
+        client:
+          mars-node:
+            registration:
+              client-id: mars-payment-node
+              client-secret: "{noop}${MARSPAY_MARS_CLIENT_SECRET:mars-secret}"
+              client-authentication-methods:
+                - client_secret_basic
+              authorization-grant-types:
+                - client_credentials
+              scopes:
+                - relay.submit
+            token:
+              access-token-time-to-live: 5m
+
+          earth-service:
+            registration:
+              client-id: earth-payment-service
+              client-secret: "{noop}${MARSPAY_EARTH_CLIENT_SECRET:earth-secret}"
+              client-authentication-methods:
+                - client_secret_basic
+              authorization-grant-types:
+                - client_credentials
+              scopes:
+                - relay.submit
+            token:
+              access-token-time-to-live: 5m
+
+          relay:
+            registration:
+              client-id: interplanetary-relay
+              client-secret: "{noop}${MARSPAY_RELAY_CLIENT_SECRET:relay-secret}"
+              client-authentication-methods:
+                - client_secret_basic
+              authorization-grant-types:
+                - client_credentials
+              scopes:
+                - relay.deliver
+            token:
+              access-token-time-to-live: 5m

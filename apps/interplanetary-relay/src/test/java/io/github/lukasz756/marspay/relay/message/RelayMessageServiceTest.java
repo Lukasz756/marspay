@@ -44,7 +44,7 @@ class RelayMessageServiceTest {
                         new RelayProperties.Destination(
                                 "EARTH_PAYMENT_SERVICE",
                                 URI.create(
-                                        "http://earth-payment-service.test/api/inbox/events"
+                                        "http://earth-payment-service.test/internal/relay/events"
                                 )
                         )
                 )
@@ -72,7 +72,11 @@ class RelayMessageServiceTest {
 
         Instant beforeReceive = Instant.now();
 
-        RelayReceiveResult result = service.receive(request);
+        RelayReceiveResult result = service.receive(
+                "MARS_PAYMENT_NODE",
+                "EARTH_PAYMENT_SERVICE",
+                request
+        );
 
         Instant afterReceive = Instant.now();
 
@@ -124,7 +128,11 @@ class RelayMessageServiceTest {
         when(relayMessageRepository.existsById(eventId))
                 .thenReturn(true);
 
-        RelayReceiveResult result = service.receive(request);
+        RelayReceiveResult result = service.receive(
+                "MARS_PAYMENT_NODE",
+                "EARTH_PAYMENT_SERVICE",
+                request
+        );
 
         assertThat(result.eventId()).isEqualTo(eventId);
         assertThat(result.duplicate()).isTrue();
@@ -237,17 +245,15 @@ class RelayMessageServiceTest {
     ) throws Exception {
         return new RelayMessageRequest(
                 eventId,
-                "MARS_PAYMENT_NODE",
-                "EARTH_PAYMENT_SERVICE",
                 "PAYMENT",
                 aggregateId,
                 "PAYMENT_CREATED",
                 objectMapper.readTree("""
-                        {
-                          "schemaVersion": 1,
-                          "status": "CREATED"
-                        }
-                        """)
+                                              {
+                                                "schemaVersion": 1,
+                                                "status": "CREATED"
+                                              }
+                                              """)
         );
     }
 
@@ -263,11 +269,11 @@ class RelayMessageServiceTest {
                 aggregateId,
                 "PAYMENT_CREATED",
                 """
-                {
-                  "schemaVersion": 1,
-                  "status": "CREATED"
-                }
-                """,
+                        {
+                          "schemaVersion": 1,
+                          "status": "CREATED"
+                        }
+                        """,
                 Instant.parse("2035-01-10T12:00:00Z")
         );
     }

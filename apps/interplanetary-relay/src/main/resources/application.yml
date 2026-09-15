@@ -2,6 +2,30 @@ spring:
   application:
     name: interplanetary-relay
 
+  security:
+    oauth2:
+      client:
+        provider:
+          marspay-authorization-server:
+            token-uri: http://localhost:9000/oauth2/token
+
+        registration:
+          delivery-client:
+            provider: marspay-authorization-server
+            client-id: interplanetary-relay
+            client-secret: ${MARSPAY_RELAY_CLIENT_SECRET:relay-secret}
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            scope:
+              - relay.deliver
+
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+          audiences:
+            - interplanetary-relay
+
   jpa:
     open-in-view: false
     hibernate:

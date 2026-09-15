@@ -26,7 +26,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 class HttpRelayTransportTest {
 
     private static final URI EARTH_URL = URI.create(
-            "http://earth-payment-service.test/api/inbox/events"
+            "http://earth-payment-service.test/internal/relay/events"
     );
 
     private MockRestServiceServer mockServer;
@@ -50,8 +50,10 @@ class HttpRelayTransportTest {
                 )
         );
 
+        RestClient testRestClient = restClientBuilder.build();
+
         transport = new HttpRelayTransport(
-                restClientBuilder,
+                testRestClient,
                 new ObjectMapper(),
                 relayProperties
         );

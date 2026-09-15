@@ -25,7 +25,11 @@ public class RelayMessageService {
     }
 
     @Transactional
-    public RelayReceiveResult receive(RelayMessageRequest request) {
+    public RelayReceiveResult receive(
+            String source,
+            String destination,
+            RelayMessageRequest request
+    ) {
         if (relayMessageRepository.existsById(request.eventId())) {
             return new RelayReceiveResult(request.eventId(), true);
         }
@@ -36,9 +40,16 @@ public class RelayMessageService {
             Instant availableAt = Instant.now()
                     .plus(relayProperties.deliveryDelay());
 
-            RelayMessage message = RelayMessage.pending(request.eventId(), request.source(), request.destination(),
-                                                        request.aggregateType(), request.aggregateId(),
-                                                        request.eventType(), payloadJson, availableAt);
+            RelayMessage message = RelayMessage.pending(
+                    request.eventId(),
+                    source,
+                    destination,
+                    request.aggregateType(),
+                    request.aggregateId(),
+                    request.eventType(),
+                    payloadJson,
+                    availableAt
+            );
 
             relayMessageRepository.saveAndFlush(message);
 

@@ -10,11 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,6 +55,12 @@ public abstract class AbstractPaymentIT {
         BalanceAccount targetAccount = accountService.openBalanceAccount(targetHolder.getId(), "MCR");
 
         return new PaymentFixture(sourceAccount, targetAccount);
+    }
+
+    protected RequestPostProcessor relayJwt() {
+        return jwt().authorities(
+                new SimpleGrantedAuthority("SCOPE_relay.deliver")
+        );
     }
 
     protected record PaymentFixture(BalanceAccount sourceAccount, BalanceAccount targetAccount) {

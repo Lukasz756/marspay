@@ -1,6 +1,29 @@
 spring:
   application:
     name: earth-payment-service
+  security:
+    oauth2:
+      client:
+        provider:
+          marspay-authorization-server:
+            token-uri: http://localhost:9000/oauth2/token
+
+        registration:
+          relay-client:
+            provider: marspay-authorization-server
+            client-id: earth-payment-service
+            client-secret: ${MARSPAY_EARTH_CLIENT_SECRET:earth-secret}
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            scope:
+              - relay.submit
+
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+          audiences:
+            - earth-payment-service
 
   jpa:
     open-in-view: false
